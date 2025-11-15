@@ -1,0 +1,91 @@
+:host {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Full-screen container */
+.page-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #6dbfff 0%, #1c2b4a 40%, #050915 100%);
+  touch-action: none; /* important for touch */
+  overflow: hidden;
+  position: relative;
+}
+
+/* Mic indicator bubble */
+.mic-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1.5rem 2rem;
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+
+  opacity: 0.9;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+/* Active state when touching the screen */
+.mic-indicator.active {
+  opacity: 1;
+  transform: scale(1.08);
+  box-shadow: 0 22px 50px rgba(0, 153, 255, 0.5);
+}
+
+/* Circle (visual microphone button) */
+.mic-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+
+  background: radial-gradient(circle at 30% 20%, #e6f3ff 0%, #58a5ff 40%, #147bff 100%);
+
+  transition: transform 0.2s ease-out;
+}
+
+/* Pulse animation when active */
+.mic-indicator.active .mic-circle {
+  animation: pulse 1.2s infinite;
+  transform: scale(1.1);
+}
+
+/* Text */
+.mic-label {
+  text-align: center;
+  color: #e4f0ff;
+}
+
+.mic-label-main {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.mic-label-sub {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Pulse animation */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(64, 160, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(64, 160, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(64, 160, 255, 0);
+  }
+}

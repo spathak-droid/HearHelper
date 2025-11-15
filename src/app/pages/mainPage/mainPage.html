@@ -1,0 +1,20 @@
+<div
+  class="page-wrapper"
+  (pointerdown)="onPointerDown($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="onPointerUp($event)"
+  (pointerleave)="onPointerUp($event)"
+>
+  <div class="mic-indicator" [class.active]="isListening">
+    <div class="mic-circle"></div>
+
+    <div class="mic-label">
+      <div class="mic-label-main">
+        {{ isListening ? 'Listening…' : 'Press & hold anywhere' }}
+      </div>
+      <div class="mic-label-sub">
+        Touch or click to activate the microphone
+      </div>
+    </div>
+  </div>
+</div>
