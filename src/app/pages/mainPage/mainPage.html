@@ -17,4 +17,15 @@
       </div>
     </div>
   </div>
+
+  <div class="messages-container">
+  @for (msg of messages; track msg) {
+    <div [class.bot-msg]="msg.from === 'bot'"
+         [class.user-msg]="msg.from === 'user'">
+      {{ msg.text }}
+    </div>
+  }
+</div>
+
+
 </div>

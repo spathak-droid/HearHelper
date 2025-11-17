@@ -24,11 +24,11 @@
             "styles": [
               "src/styles.css"
             ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            "outputPath": "dist/browser",
+            "index": "src/index.html",
+            "polyfills": [
+              "zone.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -61,7 +61,10 @@
               "buildTarget": "HearHelper:build:production"
             },
             "development": {
-              "buildTarget": "HearHelper:build:development"
+              "buildTarget": "HearHelper:build:development",
+              "ssl": true,
+              "sslKey": "./ssl/localhost-key.pem",
+              "sslCert": "./ssl/localhost.pem"
             }
           },
           "defaultConfiguration": "development"
