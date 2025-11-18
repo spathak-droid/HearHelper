@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, AfterViewInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, PLATFORM_ID, AfterViewInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild, effect } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -40,6 +40,9 @@ export class MainPage implements AfterViewInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly modelService = inject(ModelService);
   private socket: WebSocket | null = null;
+  private currentSocketToken: string | null = null;
+  private hasInitializedSocket = false;
+  private pendingSessionToken: string | null = null;
   private botAudio?: HTMLAudioElement;
   private currentAudioUrl?: string;
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
@@ -83,13 +86,29 @@ export class MainPage implements AfterViewInit, OnDestroy {
 
   constructor() {
     // DO NOT init speech here — SSR/hydration conflict.
+    effect(() => {
+      if (!isPlatformBrowser(this.platformId)) {
+        return;
+      }
+      const token = this.session()?.token ?? null;
+      this.pendingSessionToken = token;
+      if (!this.hasInitializedSocket) {
+        return;
+      }
+      if (token === this.currentSocketToken) {
+        return;
+      }
+      this.reconnectWebSocket(token);
+    });
   }
 
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
       this.initializeClientInfo();
       // Initialize WebSocket connection
-      this.initializeWebSocket();
+      this.hasInitializedSocket = true;
+      const token = this.pendingSessionToken ?? this.session()?.token ?? null;
+      this.connectWebSocket(token);
       
       // Wait for hydration to finish completely
       setTimeout(() => {
@@ -100,9 +119,7 @@ export class MainPage implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     // Close WebSocket connection when component is destroyed
-    if (this.socket) {
-      this.socket.close();
-    }
+    this.cleanupWebSocket();
 
     if (this.botAudio) {
       this.resetBotAudioState();
@@ -120,11 +137,15 @@ export class MainPage implements AfterViewInit, OnDestroy {
     this.stopSamplePlayback();
   }
 
-  private initializeWebSocket() {
-    this.socket = new WebSocket('ws://localhost:8000/ws/hat/');
+  private connectWebSocket(token: string | null) {
+    this.cleanupWebSocket();
+    const baseUrl = 'ws://localhost:8000/ws/hat/';
+    const url = token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
+    this.socket = new WebSocket(url);
+    this.currentSocketToken = token;
 
     this.socket.onopen = () => {
-      console.log('Connected to WebSocket');
+      console.log('Connected to WebSocket', token ? 'with token' : 'without token');
       this.flushPendingTTSRequests();
     };
 
@@ -174,7 +195,29 @@ export class MainPage implements AfterViewInit, OnDestroy {
 
     this.socket.onclose = () => {
       console.log('WebSocket connection closed');
+      this.socket = null;
+      this.currentSocketToken = null;
     };
+  }
+
+  private reconnectWebSocket(token: string | null) {
+    this.connectWebSocket(token);
+  }
+
+  private cleanupWebSocket() {
+    if (this.socket) {
+      try {
+        this.socket.onopen = null;
+        this.socket.onclose = null;
+        this.socket.onmessage = null;
+        this.socket.onerror = null;
+        this.socket.close();
+      } catch (err) {
+        console.warn('Error closing WebSocket', err);
+      }
+    }
+    this.socket = null;
+    this.currentSocketToken = null;
   }
 
   private sendTTSRequest(text: string) {
@@ -564,6 +607,9 @@ export class MainPage implements AfterViewInit, OnDestroy {
   }
 
   private openSigninDialog() {
+    if (this.session()) {
+      return;
+    }
     if (this.isSigninDialogOpen) return;
     this.isSigninDialogOpen = true;
     this.cdr.detectChanges();
@@ -769,7 +815,10 @@ export class MainPage implements AfterViewInit, OnDestroy {
       setTimeout(() => {
         this.voiceUpdateSuccess = '';
         this.cdr.detectChanges();
-      }, 4000);
+      }, 3000);
+      setTimeout(() => {
+        window.location.reload();
+      }, 600);
     } catch (error) {
       console.error('Failed to update voice', error);
       this.voiceUpdateError = this.extractModelError(error);

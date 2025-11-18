@@ -226,13 +226,25 @@
 }
 
 .voice-dialog {
-  width: 320px;
-  background: rgba(9, 13, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 18px;
-  padding: 24px;
+  width: 360px;
+  background: radial-gradient(circle at top, rgba(30, 50, 90, 0.95), rgba(5, 8, 18, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 22px;
+  padding: 28px;
   color: #f7fbff;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 40px 70px rgba(0, 0, 0, 0.55);
+}
+
+.voice-dialog-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 14px;
 }
 
 .voice-dialog h3 {
@@ -243,6 +255,17 @@
 .voice-dialog p {
   margin: 0 0 10px;
   color: rgba(255, 255, 255, 0.85);
+}
+
+.voice-dialog ul {
+  margin: 0;
+  padding-left: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+}
+
+.voice-dialog ul li {
+  margin-bottom: 6px;
 }
 
 .voice-dialog-actions {

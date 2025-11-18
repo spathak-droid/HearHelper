@@ -105,10 +105,15 @@
   @if (isVoiceConfirmOpen && pendingVoiceModel) {
     <div class="voice-dialog-backdrop">
       <div class="voice-dialog">
+        <div class="voice-dialog-icon">🎙️</div>
         <h3>Switch voice model?</h3>
         <p>
           Apply <strong>{{ pendingVoiceModel.common_name || pendingVoiceModel.id }}</strong> to future responses?
         </p>
+        <ul>
+          <li>This voice will be used for upcoming replies.</li>
+          <li>Current playback will continue as-is.</li>
+        </ul>
         @if (voiceUpdateError) {
           <p class="panel-error">
             {{ voiceUpdateError }}
