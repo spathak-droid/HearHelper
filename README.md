@@ -1,59 +1,47 @@
 # HearHelper
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.9.
+HearHelper is a browser-based companion that lets you speak to Codex, hear natural responses, and stream curated public-domain audiobooks (think Sherlock Holmes). Press and hold anywhere to talk, release to send, and enjoy hands-free listening.
 
-## Development server
+> ℹ️ All narrated stories bundled with this prototype are sourced from public-domain books.
 
-To start a local development server, run:
+## What this project does
 
-```bash
-ng serve
-```
+- Captures speech via the Web Speech API and sends it to a backend over WebSockets.
+- Streams TTS/audio responses, including multi-chunk book narration.
+- Provides a Help page with FAQs and a Sign-in page for future authentication layers.
+- Shows celebratory dialogs (e.g., when you finish a book chunk) encouraging the user to sign in and continue.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## How to run it locally
 
-## Code scaffolding
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the Angular dev server:
+   ```bash
+   npm run start
+   ```
+3. Visit `http://localhost:4200/` in Chrome (recommended) and allow microphone access when prompted.
+4. Ensure your backend WebSocket server is running at `ws://localhost:8000/ws/hat/` (or update the URL in `mainPage.ts`).
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Hot reloading is enabled, so UI changes will auto-refresh. If speech or TTS hangs, reload the page after restarting the backend.
 
-```bash
-ng generate component component-name
-```
+## Project structure highlights
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+- `src/app/pages/mainPage/` – voice UI, WebSocket logic, playback controls, and dialogs.
+- `src/app/pages/helpPage/` – FAQ view with guidance for new users.
+- `src/app/pages/signInPage/` – placeholder for Google/manual sign-in flows.
+- `ssl/` – certificates (if you plan to run the backend with HTTPS/WSS).
 
-```bash
-ng generate --help
-```
+## Additional scripts
 
-## Building
+- `npm run build` – production build emitted to `dist/`.
+- `npm run test` – execute Angular’s unit tests (Karma/Cypress not configured yet).
 
-To build the project run:
+## Notes
 
-```bash
-ng build
-```
+- Designed for desktop or large-screen tablets with pointer support.
+- Uses experimental Web Speech APIs; availability depends on the browser.
+- Audio playback currently supports MP3 chunks delivered as base64 from the backend.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Happy building! Let us know what other public-domain books you’d like to hear through HearHelper. 🎧

@@ -19,6 +19,116 @@
   position: relative;
 }
 
+.signin-icon {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: rgba(5, 10, 25, 0.45);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #e4f0ff;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.signin-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.signin-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.85), rgba(80,140,255,0.65));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-head {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  margin-bottom: 2px;
+}
+
+.avatar-body {
+  width: 24px;
+  height: 14px;
+  border-radius: 40% 40% 50% 50%;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.profile-menu {
+  position: fixed;
+  top: 90px;
+  right: 24px;
+  width: 200px;
+  background: rgba(5, 8, 20, 0.9);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e4f0ff;
+  padding: 16px;
+  box-sizing: border-box;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  transform: translateY(-10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.profile-menu.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.profile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.profile-menu-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.profile-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.profile-menu-list li {
+  padding: 6px 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease-out;
+}
+
+.profile-menu-list li:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* Mic indicator bubble */
 .mic-indicator {
   display: flex;
@@ -37,6 +147,40 @@
     opacity 0.2s ease-out,
     transform 0.2s ease-out,
     box-shadow 0.2s ease-out;
+}
+
+.mic-indicator::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid rgba(110, 188, 255, 0.4);
+  opacity: 0;
+  transform: scale(0.7);
+  pointer-events: none;
+}
+
+.mic-indicator.pressed::after {
+  animation: clickRipple 0.45s ease-out;
+}
+
+.mic-indicator.pressed .mic-circle {
+  transform: scale(0.92);
+  box-shadow: 0 0 30px rgba(60, 170, 255, 0.75);
+}
+
+.mic-indicator.talking .mic-circle {
+  animation: botTalkingPulse 0.85s ease-in-out infinite;
+  box-shadow: 0 0 35px rgba(80, 180, 255, 0.85);
+}
+
+.mic-indicator.talking::after {
+  animation: talkingHalo 1.2s ease-out infinite;
+  opacity: 1;
+}
+
+.mic-indicator.audio-mode .mic-circle {
+  background: radial-gradient(circle at 30% 20%, #fff4ec 0%, #ffb880 40%, #ff7b1f 100%);
 }
 
 /* Active state when touching the screen */
@@ -61,6 +205,18 @@
 .mic-indicator.active .mic-circle {
   animation: pulse 1.2s infinite;
   transform: scale(1.1);
+}
+
+.mic-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #083b75;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* Text */
@@ -91,7 +247,14 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  pointer-events: none; /* Allow clicking through to the mic button */
+  pointer-events: auto;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  scroll-behavior: smooth;
+}
+
+.messages-container.talking {
+  transform: translateY(-10px) scale(1.01);
+  opacity: 1;
 }
 
 /* Add some spacing between the mic and messages */
@@ -142,9 +305,146 @@
   border-bottom-right-radius: 4px;
 }
 
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.active-message {
+  box-shadow: 0 0 18px rgba(90, 190, 255, 0.7);
+  border: 1px solid rgba(80, 180, 255, 0.65);
+}
+
+.message-text {
+  white-space: pre-wrap;
+}
+
+.message-chunk {
+  font-size: 0.85rem;
+  margin-top: 6px;
+  opacity: 0.75;
+}
+
+.scroll-to-latest {
+  position: fixed;
+  right: 24px;
+  bottom: 80px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  color: #e4f0ff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scroll-to-latest:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.35);
+}
+
+.signin-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 17, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(6px);
+}
+
+.signin-dialog {
+  width: min(420px, calc(100% - 40px));
+  background: radial-gradient(circle at top, rgba(88, 165, 255, 0.15), rgba(5, 8, 20, 0.95));
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 35px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  color: #e4f0ff;
+}
+
+.dialog-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.signin-dialog h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.8rem;
+  color: #f2f7ff;
+}
+
+.signin-dialog p {
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.ghost-btn {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: #e4f0ff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.primary-btn {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #58a5ff, #147bff);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes clickRipple {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes botTalkingPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+@keyframes talkingHalo {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.88);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
 }
 
 

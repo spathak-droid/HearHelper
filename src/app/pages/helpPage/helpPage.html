@@ -1,0 +1,21 @@
+<div class="help-page">
+  <header class="help-header">
+    <div>
+      <p class="eyebrow">Need assistance?</p>
+      <h1>Help & FAQ</h1>
+      <p class="intro">
+        Browse the most common questions about HearHelper and learn how to get the best experience.
+      </p>
+    </div>
+    <a routerLink="/" class="back-link">← Back to assistant</a>
+  </header>
+
+  <section class="faq-list">
+    @for (faq of faqs; track faq.question) {
+      <article class="faq-item">
+        <h3>{{ faq.question }}</h3>
+        <p>{{ faq.answer }}</p>
+      </article>
+    }
+  </section>
+</div>

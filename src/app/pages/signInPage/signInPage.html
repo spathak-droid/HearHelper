@@ -1,0 +1,37 @@
+<div class="signin-page">
+  <header class="signin-header">
+    <div>
+      <p class="eyebrow">Welcome back</p>
+      <h1>Sign in to Hear Helper</h1>
+      <p class="intro">
+        Continue listening across devices, pick up your books, and unlock more personalized voices.
+      </p>
+    </div>
+    <a routerLink="/" class="back-link">← Back to assistant</a>
+  </header>
+
+  <section class="signin-options">
+    <button class="google-button" type="button" (click)="onGoogleSignIn()">
+      <span class="google-icon">G</span>
+      Continue with Google
+    </button>
+
+    <div class="divider">
+      <span></span>
+      <p>or use email</p>
+      <span></span>
+    </div>
+
+    <form class="signin-form" (submit)="onManualSignIn(); $event.preventDefault()">
+      <label>
+        Email
+        <input type="email" placeholder="you@example.com" required>
+      </label>
+      <label>
+        Password
+        <input type="password" placeholder="••••••••" required>
+      </label>
+      <button type="submit" class="primary-btn">Sign in</button>
+    </form>
+  </section>
+</div>

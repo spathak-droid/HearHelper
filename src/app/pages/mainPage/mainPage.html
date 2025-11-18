@@ -5,27 +5,105 @@
   (pointercancel)="onPointerUp($event)"
   (pointerleave)="onPointerUp($event)"
 >
-  <div class="mic-indicator" [class.active]="isListening">
-    <div class="mic-circle"></div>
+  <button class="signin-icon"
+          type="button"
+          aria-label="Profile menu"
+          (pointerdown)="$event.stopPropagation()"
+          (pointerup)="$event.stopPropagation(); toggleProfilePane()">
+    <span class="signin-avatar">
+      <span class="avatar-head"></span>
+      <span class="avatar-body"></span>
+    </span>
+  </button>
+
+  <div class="profile-menu"
+       [class.open]="isProfilePaneOpen"
+       (pointerdown)="$event.stopPropagation()"
+       (pointerup)="$event.stopPropagation()">
+    <div class="profile-menu-header">
+      <span class="profile-menu-label">User</span>
+      <span class="profile-menu-name">Guest</span>
+    </div>
+    <ul class="profile-menu-list">
+      <li (click)="openSignIn()">Sign in</li>
+      <li>Settings</li>
+      <li (click)="openHelp()">Help</li>
+    </ul>
+  </div>
+
+  <div class="mic-indicator"
+       [class.active]="isListening"
+       [class.pressed]="isPressing"
+       [class.talking]="isBotTalking"
+       [class.audio-mode]="hasActiveAudio">
+    <div class="mic-circle">
+      @if (hasActiveAudio) {
+        <div class="mic-icon">
+          {{ isAudioPaused ? 'Play' : 'Pause' }}
+        </div>
+      }
+    </div>
 
     <div class="mic-label">
       <div class="mic-label-main">
-        {{ isListening ? 'Listening…' : 'Press & hold anywhere' }}
+        {{ primaryButtonLabel }}
       </div>
       <div class="mic-label-sub">
-        Touch or click to activate the microphone
+        {{ secondaryButtonLabel }}
       </div>
     </div>
   </div>
 
-  <div class="messages-container">
-  @for (msg of messages; track msg) {
-    <div [class.bot-msg]="msg.from === 'bot'"
-         [class.user-msg]="msg.from === 'user'">
-      {{ msg.text }}
+  <div class="messages-container"
+       [class.talking]="isBotTalking"
+       #messagesContainer
+       (scroll)="onMessagesScroll()"
+       (pointerdown)="$event.stopPropagation()">
+    @for (msg of messages; track msg.id) {
+      <div class="message"
+           [attr.data-message-id]="msg.id"
+           [class.bot-msg]="msg.from === 'bot'"
+           [class.user-msg]="msg.from === 'user'"
+           [class.active-message]="msg.id === activeMessageId">
+        <div class="message-text">
+          {{ msg.text }}
+        </div>
+        @if (msg.chunk !== undefined) {
+          <div class="message-chunk">
+            Chunk {{ msg.chunk }}@if (msg.totalChunks !== undefined) { /{{ msg.totalChunks }} }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (showScrollToLatest) {
+    <button class="scroll-to-latest"
+            type="button"
+            (pointerdown)="$event.stopPropagation()"
+            (pointerup)="$event.stopPropagation()"
+            (click)="scrollToBottom(true)">
+      ↓
+    </button>
+  }
+
+  @if (isSigninDialogOpen) {
+    <div class="signin-dialog-backdrop"
+         (pointerdown)="$event.stopPropagation()"
+         (pointerup)="$event.stopPropagation()">
+      <div class="signin-dialog">
+        <div class="dialog-eyebrow">Hear Helper</div>
+        <h2>🎉 Whoo hoo! You finished your first listen.</h2>
+        <p>
+          You’ve reached the end of this book preview. Sign in to keep listening, choose another title,
+          or sync your progress across devices.
+        </p>
+        <div class="dialog-actions">
+          <button type="button" class="ghost-btn" (click)="closeSigninDialog()">Not now</button>
+          <button type="button" class="primary-btn" (click)="goToSignInFromDialog()">Sign in</button>
+        </div>
+      </div>
     </div>
   }
-</div>
-
 
 </div>
