@@ -40,8 +40,13 @@
          (pointerup)="$event.stopPropagation()">
       <button type="button"
               class="change-model-btn"
-              (click)="toggleModelSelector($event)">
-        {{ isModelPanelOpen ? 'Hide voice models' : 'Change voice model' }}
+              (click)="toggleModelSelector($event)"
+              aria-haspopup="true"
+              [attr.aria-expanded]="isModelPanelOpen">
+        <span class="voice-label">
+          Voice: <strong>{{ currentVoiceName }}</strong>
+        </span>
+        <span class="voice-dropdown-icon" [class.open]="isModelPanelOpen"></span>
       </button>
       @if (isModelPanelOpen) {
         <div class="model-backdrop" (click)="closeModelPanel()"></div>
@@ -70,6 +75,7 @@
                      role="button"
                      tabindex="0"
                      [class.playing]="playingModelId === model.id"
+                     [class.active-voice]="isActiveVoice(model)"
                      (click)="promptVoiceChange(model, $event)"
                      (keydown.enter)="promptVoiceChange(model, $event)"
                      (keydown.space)="promptVoiceChange(model, $event)">

@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
 
 @Component({
@@ -13,6 +13,7 @@ export class App {
   protected readonly title = signal('HearHelper');
   showGlobalMenu = false;
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   protected readonly session = this.auth.session;
   protected readonly userDisplayName = computed(() => {
     const user = this.session()?.user;
@@ -26,5 +27,8 @@ export class App {
   onSignOut() {
     this.auth.clearSession();
     this.showGlobalMenu = false;
+    this.router.navigate(['/signin']).catch((error) => {
+      console.error('Failed to navigate to sign in after logout', error);
+    });
   }
 }

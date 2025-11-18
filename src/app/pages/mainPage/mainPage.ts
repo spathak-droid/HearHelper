@@ -84,6 +84,22 @@ export class MainPage implements AfterViewInit, OnDestroy {
   recognition: any;
   transcript: string = '';
 
+  private get activeVoiceId(): string | undefined {
+    return this.pendingVoiceModel?.id || this.session()?.user?.voice;
+  }
+
+  get currentVoiceName(): string {
+    const voiceName =
+      this.session()?.user?.voice_common_name ||
+      this.pendingVoiceModel?.common_name ||
+      this.session()?.user?.voice;
+    return voiceName || 'Default';
+  }
+
+  isActiveVoice(model: VoiceModel): boolean {
+    return !!this.activeVoiceId && model.id === this.activeVoiceId;
+  }
+
   constructor() {
     // DO NOT init speech here — SSR/hydration conflict.
     effect(() => {
@@ -810,6 +826,7 @@ export class MainPage implements AfterViewInit, OnDestroy {
     try {
       await firstValueFrom(this.modelService.setVoice(this.pendingVoiceModel.id));
       this.voiceUpdateSuccess = `${this.pendingVoiceModel.common_name || this.pendingVoiceModel.id} is now active.`;
+      this.auth.updateVoice(this.pendingVoiceModel.id, this.pendingVoiceModel.common_name);
       this.closeVoiceDialog();
       this.closeModelPanel();
       setTimeout(() => {

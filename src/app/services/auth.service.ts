@@ -12,6 +12,8 @@ export type AuthUser = {
   first_name: string;
   last_name: string;
   email: string;
+  voice?: string;
+  voice_common_name?: string;
 };
 
 export type SignInResponse = {
@@ -62,6 +64,22 @@ export class AuthService implements OnDestroy {
     return this.http
       .post<SignInResponse>(this.endpoint, credentials)
       .pipe(tap((response) => this.persistSession(response)));
+  }
+
+  updateVoice(voice: string, voiceName?: string) {
+    const current = this.sessionState();
+    if (!current) {
+      return;
+    }
+    const updated: SignInResponse = {
+      ...current,
+      user: {
+        ...current.user,
+        voice,
+        voice_common_name: voiceName
+      }
+    };
+    this.persistSession(updated);
   }
 
   clearSession() {
