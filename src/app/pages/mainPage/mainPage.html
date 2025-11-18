@@ -5,42 +5,21 @@
   (pointercancel)="onPointerUp($event)"
   (pointerleave)="onPointerUp($event)"
 >
-  <button class="signin-icon"
-          type="button"
-          aria-label="Profile menu"
-          (pointerdown)="$event.stopPropagation()"
-          (pointerup)="$event.stopPropagation(); toggleProfilePane()">
-    <span class="signin-avatar">
-      <span class="avatar-head"></span>
-      <span class="avatar-body"></span>
-    </span>
-  </button>
-
-  <div class="profile-menu"
-       [class.open]="isProfilePaneOpen"
-       (pointerdown)="$event.stopPropagation()"
-       (pointerup)="$event.stopPropagation()">
-    <div class="profile-menu-header">
-      <span class="profile-menu-label">User</span>
-      <span class="profile-menu-name">Guest</span>
-    </div>
-    <ul class="profile-menu-list">
-      <li (click)="openSignIn()">Sign in</li>
-      <li (click)="openSignUp()">Sign up</li>
-      <li>Settings</li>
-      <li (click)="openHelp()">Help</li>
-    </ul>
-  </div>
-
   <div class="mic-indicator"
        [class.active]="isListening"
        [class.pressed]="isPressing"
        [class.talking]="isBotTalking"
        [class.audio-mode]="hasActiveAudio">
-    <div class="mic-circle">
+    <div class="mic-circle" [class.playback]="hasActiveAudio">
       @if (hasActiveAudio) {
-        <div class="mic-icon">
-          {{ isAudioPaused ? 'Play' : 'Pause' }}
+        <div class="playback-icon" [class.paused]="isAudioPaused">
+          {{ isAudioPaused ? '▶' : '⏸' }}
+        </div>
+      } @else {
+        <div class="mic-shape">
+          <div class="mic-body"></div>
+          <div class="mic-neck"></div>
+          <div class="mic-stand"></div>
         </div>
       }
     </div>
@@ -55,6 +34,104 @@
     </div>
   </div>
 
+  @if (session()) {
+    <div class="model-controls"
+         (pointerdown)="$event.stopPropagation()"
+         (pointerup)="$event.stopPropagation()">
+      <button type="button"
+              class="change-model-btn"
+              (click)="toggleModelSelector($event)">
+        {{ isModelPanelOpen ? 'Hide voice models' : 'Change voice model' }}
+      </button>
+      @if (isModelPanelOpen) {
+        <div class="model-backdrop" (click)="closeModelPanel()"></div>
+        <div class="model-panel" (click)="$event.stopPropagation()">
+          <div class="panel-header">
+            <div>
+              <div class="panel-eyebrow">Preview voices</div>
+              <h3>Choose a model</h3>
+            </div>
+            <button type="button"
+                    class="panel-close"
+                    (click)="closeModelPanel()"
+                    aria-label="Close voice models">
+              ✕
+            </button>
+          </div>
+          @if (modelError) {
+            <p class="panel-error">{{ modelError }}</p>
+          }
+          @if (isModelLoading) {
+            <div class="panel-loading">Loading models…</div>
+          } @else if (models.length) {
+            <div class="model-list">
+              @for (model of models; track model.id) {
+                <div class="model-row"
+                     role="button"
+                     tabindex="0"
+                     [class.playing]="playingModelId === model.id"
+                     (click)="promptVoiceChange(model, $event)"
+                     (keydown.enter)="promptVoiceChange(model, $event)"
+                     (keydown.space)="promptVoiceChange(model, $event)">
+                  <div class="model-info">
+                    <span class="model-id">{{ model.common_name || model.id }}</span>
+                    <small>{{ model.sample?.text }}</small>
+                  </div>
+                  <button type="button"
+                          class="model-action"
+                          [attr.aria-label]="playingModelId === model.id ? 'Pause sample' : 'Play sample'"
+                          (click)="toggleSample(model, $event)">
+                    <span class="action-icon">
+                      {{ playingModelId === model.id ? '⏸' : '▶' }}
+                    </span>
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="panel-note">No models available.</p>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (voiceUpdateSuccess) {
+    <div class="voice-toast">
+      {{ voiceUpdateSuccess }}
+    </div>
+  }
+
+  @if (isVoiceConfirmOpen && pendingVoiceModel) {
+    <div class="voice-dialog-backdrop">
+      <div class="voice-dialog">
+        <h3>Switch voice model?</h3>
+        <p>
+          Apply <strong>{{ pendingVoiceModel.common_name || pendingVoiceModel.id }}</strong> to future responses?
+        </p>
+        @if (voiceUpdateError) {
+          <p class="panel-error">
+            {{ voiceUpdateError }}
+          </p>
+        }
+        <div class="voice-dialog-actions">
+          <button type="button"
+                  class="ghost-btn"
+                  (click)="closeVoiceDialog()"
+                  [disabled]="isVoiceUpdating">
+            Cancel
+          </button>
+          <button type="button"
+                  class="primary-btn"
+                  (click)="confirmVoiceChange()"
+                  [disabled]="isVoiceUpdating">
+            {{ isVoiceUpdating ? 'Updating…' : 'Yes, switch' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   <div class="messages-container"
        [class.talking]="isBotTalking"
        #messagesContainer
@@ -67,7 +144,10 @@
            [class.user-msg]="msg.from === 'user'"
            [class.active-message]="msg.id === activeMessageId">
         <div class="message-text">
-          {{ msg.text }}
+          {{ msg.displayText ?? msg.text }}
+          @if (msg.isTyping) {
+            <span class="typing-cursor">|</span>
+          }
         </div>
         @if (msg.chunk !== undefined) {
           <div class="message-chunk">

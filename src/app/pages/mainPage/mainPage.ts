@@ -1,6 +1,9 @@
 import { Component, inject, PLATFORM_ID, AfterViewInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { ModelService, VoiceModel } from '../../services/model.service';
+import { firstValueFrom } from 'rxjs';
 
 declare var webkitSpeechRecognition: any;
 
@@ -13,6 +16,8 @@ type ChatMessage = {
   chunk?: number;
   totalChunks?: number;
   type?: string;
+  displayText?: string;
+  isTyping?: boolean;
 };
 
 type ClientInfo = {
@@ -32,6 +37,8 @@ export class MainPage implements AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly modelService = inject(ModelService);
   private socket: WebSocket | null = null;
   private botAudio?: HTMLAudioElement;
   private currentAudioUrl?: string;
@@ -46,7 +53,6 @@ export class MainPage implements AfterViewInit, OnDestroy {
   isPressing = false;
   isAudioPaused = false;
   hasActiveAudio = false;
-  isProfilePaneOpen = false;
   isSigninDialogOpen = false;
   showScrollToLatest = false;
   private mediaStream?: MediaStream;
@@ -57,6 +63,20 @@ export class MainPage implements AfterViewInit, OnDestroy {
   private activeBotMessage?: ChatMessage;
   private pendingTTSRequests: Array<{ type: 'tts'; text: string; message_id: string }> = [];
   private messageCounter = 0;
+  private typingTimers = new Map<string, number>();
+  private readonly typingSpeed = 25;
+  models: VoiceModel[] = [];
+  isModelPanelOpen = false;
+  isModelLoading = false;
+  modelError = '';
+  private sampleAudio?: HTMLAudioElement;
+  playingModelId: string | null = null;
+  protected readonly session = this.auth.session;
+  pendingVoiceModel?: VoiceModel;
+  isVoiceConfirmOpen = false;
+  isVoiceUpdating = false;
+  voiceUpdateError = '';
+  voiceUpdateSuccess = '';
 
   recognition: any;
   transcript: string = '';
@@ -96,6 +116,8 @@ export class MainPage implements AfterViewInit, OnDestroy {
       clearTimeout(this.longPressTimeoutId);
       this.longPressTimeoutId = undefined;
     }
+    this.clearAllTypingTimers();
+    this.stopSamplePlayback();
   }
 
   private initializeWebSocket() {
@@ -124,9 +146,12 @@ export class MainPage implements AfterViewInit, OnDestroy {
           text: responseLog,
           chunk: data.book?.chunk ?? data.book?.chunk_index,
           totalChunks: data.book?.total_chunks ?? data.book?.totalChunks,
-          type: data.type
+          type: data.type,
+          displayText: '',
+          isTyping: true
         };
         this.messages.push(botMessage);
+        this.startTypingEffect(botMessage);
         this.scrollToBottom();
         // Handle potential large base64 payloads safely
         if (data.audio) {
@@ -303,9 +328,6 @@ export class MainPage implements AfterViewInit, OnDestroy {
   onPointerDown(event: PointerEvent) {
     event.preventDefault();
     this.isPressing = true;
-    if (this.isProfilePaneOpen) {
-      this.isProfilePaneOpen = false;
-    }
 
     if (this.hasActiveAudio && this.botAudio) {
       this.beginAudioLongPressDetection();
@@ -518,29 +540,10 @@ export class MainPage implements AfterViewInit, OnDestroy {
     }
   }
 
-  toggleProfilePane() {
-    this.isProfilePaneOpen = !this.isProfilePaneOpen;
-  }
-
   openSignIn() {
-    this.isProfilePaneOpen = false;
     this.isSigninDialogOpen = false;
     this.router.navigate(['/signin']).catch((error) => {
       console.error('Failed to navigate to sign in page', error);
-    });
-  }
-
-  openSignUp() {
-    this.isProfilePaneOpen = false;
-    this.router.navigate(['/signup']).catch((error) => {
-      console.error('Failed to navigate to sign up page', error);
-    });
-  }
-
-  openHelp() {
-    this.isProfilePaneOpen = false;
-    this.router.navigate(['/help']).catch((error) => {
-      console.error('Failed to navigate to help page', error);
     });
   }
 
@@ -574,6 +577,206 @@ export class MainPage implements AfterViewInit, OnDestroy {
   goToSignInFromDialog() {
     this.closeSigninDialog();
     this.openSignIn();
+  }
+
+  private startTypingEffect(message: ChatMessage) {
+    if (!isPlatformBrowser(this.platformId)) {
+      message.displayText = message.text;
+      message.isTyping = false;
+      return;
+    }
+    this.cancelTypingEffect(message.id);
+    message.displayText = '';
+    message.isTyping = true;
+
+    const typeNext = () => {
+      const currentLength = message.displayText?.length ?? 0;
+      if (currentLength >= message.text.length) {
+        message.isTyping = false;
+        this.cancelTypingEffect(message.id);
+        this.cdr.detectChanges();
+        return;
+      }
+
+      const nextLength = currentLength + 1;
+      message.displayText = message.text.slice(0, nextLength);
+      this.cdr.detectChanges();
+      this.scrollToBottom();
+
+      const timeoutId = window.setTimeout(typeNext, this.typingSpeed);
+      this.typingTimers.set(message.id, timeoutId);
+    };
+
+    typeNext();
+  }
+
+  private cancelTypingEffect(messageId: string) {
+    const timeoutId = this.typingTimers.get(messageId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.typingTimers.delete(messageId);
+    }
+  }
+
+  private clearAllTypingTimers() {
+    this.typingTimers.forEach((id) => clearTimeout(id));
+    this.typingTimers.clear();
+  }
+
+  toggleModelSelector(event?: Event) {
+    event?.stopPropagation();
+    if (this.isModelPanelOpen) {
+      this.closeModelPanel();
+      return;
+    }
+    this.isModelPanelOpen = true;
+    this.modelError = '';
+    this.voiceUpdateError = '';
+    if (!this.auth.getSessionSnapshot()) {
+      this.modelError = 'Sign in to hear voice models.';
+      return;
+    }
+    if (!this.models.length) {
+      this.loadVoiceModels();
+    }
+  }
+
+  closeModelPanel() {
+    this.isModelPanelOpen = false;
+    this.modelError = '';
+    this.stopSamplePlayback();
+    this.voiceUpdateError = '';
+    if (this.isVoiceConfirmOpen) {
+      this.closeVoiceDialog();
+    }
+  }
+
+  toggleSample(model: VoiceModel, event?: Event) {
+    event?.stopPropagation();
+    this.playSample(model);
+  }
+
+  async playSample(model: VoiceModel) {
+    if (!model.sample?.data) {
+      this.modelError = 'No preview is available for this model.';
+      return;
+    }
+    if (this.playingModelId === model.id) {
+      this.stopSamplePlayback();
+      return;
+    }
+    this.stopSamplePlayback();
+    try {
+      const format = model.sample.format || 'mp3';
+      const dataUrl = `data:audio/${format};base64,${model.sample.data}`;
+      this.sampleAudio = new Audio(dataUrl);
+      this.playingModelId = model.id;
+      this.sampleAudio.onended = () => {
+        this.playingModelId = null;
+        this.sampleAudio = undefined;
+        this.cdr.detectChanges();
+      };
+      await this.sampleAudio.play();
+    } catch (error) {
+      console.error('Failed to play model sample', error);
+      this.modelError = 'Unable to play that preview. Try another model.';
+      this.stopSamplePlayback();
+    }
+  }
+
+  private async loadVoiceModels() {
+    if (this.isModelLoading) {
+      return;
+    }
+    this.isModelLoading = true;
+    this.modelError = '';
+    try {
+      this.models = await firstValueFrom(this.modelService.fetchModels());
+    } catch (error) {
+      console.error('Failed to load models', error);
+      this.modelError = this.extractModelError(error);
+    } finally {
+      this.isModelLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private stopSamplePlayback() {
+    if (this.sampleAudio) {
+      this.sampleAudio.pause();
+      this.sampleAudio.currentTime = 0;
+      this.sampleAudio = undefined;
+    }
+    this.playingModelId = null;
+  }
+
+  private extractModelError(error: unknown) {
+    if (!error) {
+      return 'Unable to load models right now.';
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    const httpError = error as { error?: unknown; message?: string; statusText?: string };
+    if (httpError.error) {
+      if (typeof httpError.error === 'string') {
+        return httpError.error;
+      }
+      if (typeof httpError.error === 'object' && httpError.error) {
+        const { detail, message } = httpError.error as { detail?: string; message?: string };
+        if (message) {
+          return message;
+        }
+        if (detail) {
+          return detail;
+        }
+      }
+    }
+    if (httpError.message) {
+      return httpError.message;
+    }
+    if (httpError.statusText) {
+      return httpError.statusText;
+    }
+    return 'Unable to load models right now.';
+  }
+
+  promptVoiceChange(model: VoiceModel, event?: Event) {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.pendingVoiceModel = model;
+    this.voiceUpdateError = '';
+    this.isVoiceConfirmOpen = true;
+  }
+
+  closeVoiceDialog() {
+    this.isVoiceConfirmOpen = false;
+    this.pendingVoiceModel = undefined;
+    this.voiceUpdateError = '';
+  }
+
+  async confirmVoiceChange() {
+    if (!this.pendingVoiceModel) {
+      return;
+    }
+    this.isVoiceUpdating = true;
+    this.voiceUpdateError = '';
+    try {
+      await firstValueFrom(this.modelService.setVoice(this.pendingVoiceModel.id));
+      this.voiceUpdateSuccess = `${this.pendingVoiceModel.common_name || this.pendingVoiceModel.id} is now active.`;
+      this.closeVoiceDialog();
+      this.closeModelPanel();
+      setTimeout(() => {
+        this.voiceUpdateSuccess = '';
+        this.cdr.detectChanges();
+      }, 4000);
+    } catch (error) {
+      console.error('Failed to update voice', error);
+      this.voiceUpdateError = this.extractModelError(error);
+    } finally {
+      this.isVoiceUpdating = false;
+      this.cdr.detectChanges();
+    }
   }
 
   get primaryButtonLabel(): string {
@@ -669,7 +872,8 @@ export class MainPage implements AfterViewInit, OnDestroy {
     const userMessage: ChatMessage = {
       id: this.createMessageId('user'),
       from: 'user',
-      text
+      text,
+      displayText: text
     };
 
     this.messages.push(userMessage);

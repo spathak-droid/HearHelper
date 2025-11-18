@@ -4,12 +4,13 @@
   background: radial-gradient(circle at top, #6dbfff 0%, #1c2b4a 40%, #050915 100%);
   color: #e4f0ff;
   font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  overflow-y: auto;
 }
 
 .signup-page {
   max-width: 640px;
   margin: 0 auto;
-  padding: 60px 20px 120px;
+  padding: 48px 20px 120px;
   box-sizing: border-box;
 }
 
@@ -63,6 +64,8 @@
   padding: 32px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 25px 40px rgba(0, 0, 0, 0.35);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 .signup-form {
@@ -186,4 +189,20 @@
 
 .signin-cta a:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .signup-page {
+    padding-top: 32px;
+  }
+
+  .signup-card {
+    padding: 24px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+
+  .tier-options {
+    grid-template-columns: 1fr;
+  }
 }

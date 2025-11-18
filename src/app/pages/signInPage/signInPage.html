@@ -11,10 +11,25 @@
   </header>
 
   <section class="signin-options">
-    <button class="google-button" type="button" (click)="onGoogleSignIn()">
+    <button class="google-button"
+            type="button"
+            (click)="onGoogleSignIn()"
+            [disabled]="isGoogleLoading">
       <span class="google-icon">G</span>
-      Continue with Google
+      {{ isGoogleLoading ? 'Signing in…' : 'Continue with Google' }}
     </button>
+
+    <div class="google-status" *ngIf="googleProfile">
+      Signed in as {{ googleProfile.name || googleProfile.email }}
+    </div>
+    <div class="google-error" *ngIf="googleError">
+      {{ googleError }}
+    </div>
+
+    <div class="session-storage" *ngIf="session()?.user as signedInUser">
+      Signed in as <strong>{{ signedInUser.first_name }} {{ signedInUser.last_name }}</strong>
+      ({{ signedInUser.email }}). Token stored for this session.
+    </div>
 
     <div class="divider">
       <span></span>
@@ -63,9 +78,16 @@
       </label>
       <button type="submit"
               class="primary-btn"
-              [disabled]="!signInForm.valid">
-        Sign in
+              [disabled]="!signInForm.valid || isManualLoading">
+        {{ isManualLoading ? 'Signing in…' : 'Sign in' }}
       </button>
+
+      <div class="signin-status success" *ngIf="manualSuccess">
+        {{ manualSuccess }}
+      </div>
+      <div class="signin-status error" *ngIf="manualError">
+        {{ manualError }}
+      </div>
     </form>
 
     <div class="signup-cta">

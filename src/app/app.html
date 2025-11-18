@@ -1,1 +1,58 @@
+<div class="global-actions">
+  <button class="global-signin-icon"
+          type="button"
+          [attr.aria-label]="session() ? 'Open profile for ' + userDisplayName() : 'Open profile menu'"
+          (click)="showGlobalMenu = !showGlobalMenu">
+    <span class="signin-avatar">
+      <img src="/images/blank-avatar.svg"
+           alt=""
+           aria-hidden="true">
+    </span>
+  </button>
+
+  <a class="global-home-icon"
+     routerLink="/"
+     aria-label="Home">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+  </a>
+</div>
+
+<div class="global-profile-menu" [class.open]="showGlobalMenu">
+  <div class="profile-menu-header">
+    <span class="profile-menu-label">{{ session() ? 'Signed in' : 'User' }}</span>
+    <span class="profile-menu-name">{{ userDisplayName() }}</span>
+  </div>
+  <p class="profile-menu-subtext" *ngIf="session()?.user?.email as email">
+    {{ email }}
+  </p>
+  <ul class="profile-menu-list">
+    <ng-container *ngIf="session(); else loggedOutLinks">
+      <li class="session-indicator">
+        <span class="menu-icon">🪪</span>
+        <span>Session active</span>
+      </li>
+      <li (click)="onSignOut()">
+        <span class="menu-icon">🚪</span>
+        <span>Sign out</span>
+      </li>
+    </ng-container>
+    <ng-template #loggedOutLinks>
+      <li routerLink="/signin" (click)="showGlobalMenu = false">
+        <span class="menu-icon">🔐</span>
+        <span>Sign in</span>
+      </li>
+      <li routerLink="/signup" (click)="showGlobalMenu = false">
+        <span class="menu-icon">✨</span>
+        <span>Sign up</span>
+      </li>
+    </ng-template>
+    <li routerLink="/help" (click)="showGlobalMenu = false">
+      <span class="menu-icon">❓</span>
+      <span>Help</span>
+    </li>
+  </ul>
+</div>
+
 <router-outlet />

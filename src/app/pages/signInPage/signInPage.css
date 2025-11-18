@@ -84,6 +84,13 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.google-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .google-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 22px rgba(0, 0, 0, 0.2);
@@ -224,4 +231,45 @@
 
 .signup-cta a:hover {
   text-decoration: underline;
+}
+
+.google-status {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+}
+
+.google-error {
+  font-size: 0.9rem;
+  color: #ff8a8a;
+  text-align: center;
+}
+
+.session-storage {
+  font-size: 0.9rem;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(5, 8, 20, 0.35);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  margin: -6px 0 4px;
+}
+
+.signin-status {
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  margin-top: 6px;
+  text-align: center;
+}
+
+.signin-status.success {
+  background: rgba(13, 192, 145, 0.15);
+  color: #7affc6;
+}
+
+.signin-status.error {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff8a8a;
 }
