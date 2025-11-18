@@ -3,17 +3,17 @@
   min-height: 100vh;
   background: radial-gradient(circle at top, #6dbfff 0%, #1c2b4a 40%, #050915 100%);
   color: #e4f0ff;
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
-.signin-page {
-  max-width: 520px;
+.signup-page {
+  max-width: 640px;
   margin: 0 auto;
   padding: 60px 20px 120px;
   box-sizing: border-box;
 }
 
-.signin-header {
+.signup-header {
   display: flex;
   justify-content: space-between;
   gap: 24px;
@@ -29,9 +29,9 @@
   margin: 0 0 8px 0;
 }
 
-.signin-header h1 {
+.signup-header h1 {
   margin: 0 0 10px 0;
-  font-size: 2.2rem;
+  font-size: 2.3rem;
 }
 
 .intro {
@@ -57,87 +57,48 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
 }
 
-.signin-options {
+.signup-card {
   background: rgba(0, 0, 0, 0.25);
   border-radius: 24px;
-  padding: 30px;
+  padding: 32px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 25px 40px rgba(0, 0, 0, 0.35);
+}
+
+.signup-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-.google-button {
+.name-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  border-radius: 999px;
-  padding: 12px;
-  border: none;
-  background: #fff;
-  color: #0f172a;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.google-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.2);
-}
-
-.google-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ea4335, #fbbc05, #34a853, #4285f4);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.85rem;
-}
-
-.divider span {
-  flex: 1;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.signin-form {
-  display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
-.signin-form label {
+.name-row label {
+  flex: 1;
+  min-width: 160px;
+}
+
+.signup-form label {
   display: flex;
   flex-direction: column;
   gap: 8px;
   font-size: 0.95rem;
 }
 
-.signin-form input {
+.signup-form input {
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   padding: 12px;
   background: rgba(5, 8, 20, 0.5);
   color: #e4f0ff;
   font-size: 1rem;
 }
 
-.signin-form label.invalid input {
+.signup-form label.invalid input {
   border-color: #ff6b6b;
 }
 
@@ -150,8 +111,12 @@
   align-items: center;
   background: rgba(5, 8, 20, 0.5);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   padding: 0 6px 0 0;
+}
+
+.password-field.invalid .password-input-wrapper {
+  border-color: #ff6b6b;
 }
 
 .password-input-wrapper input {
@@ -159,10 +124,6 @@
   border: none;
   background: transparent;
   padding: 12px;
-}
-
-.password-field.invalid .password-input-wrapper {
-  border-color: #ff6b6b;
 }
 
 .password-input-wrapper input:focus {
@@ -209,19 +170,20 @@
   cursor: not-allowed;
 }
 
-.signup-cta {
+.signin-cta {
+  margin-top: 16px;
   text-align: center;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.8);
 }
 
-.signup-cta a {
+.signin-cta a {
   color: #9fd0ff;
   text-decoration: none;
   font-weight: 600;
   margin-left: 4px;
 }
 
-.signup-cta a:hover {
+.signin-cta a:hover {
   text-decoration: underline;
 }

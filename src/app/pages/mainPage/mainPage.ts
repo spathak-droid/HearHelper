@@ -15,6 +15,12 @@ type ChatMessage = {
   type?: string;
 };
 
+type ClientInfo = {
+  os: string;
+  browser: string;
+  userAgent: string;
+};
+
 @Component({
   selector: 'main-page',
   standalone: true,
@@ -44,6 +50,8 @@ export class MainPage implements AfterViewInit, OnDestroy {
   isSigninDialogOpen = false;
   showScrollToLatest = false;
   private mediaStream?: MediaStream;
+  private clientInfo?: ClientInfo;
+  private readonly clientInfoStorageKey = 'hearhelper-client-info';
   messages: ChatMessage[] = [];
   activeMessageId: string | null = null;
   private activeBotMessage?: ChatMessage;
@@ -59,6 +67,7 @@ export class MainPage implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
+      this.initializeClientInfo();
       // Initialize WebSocket connection
       this.initializeWebSocket();
       
@@ -147,7 +156,8 @@ export class MainPage implements AfterViewInit, OnDestroy {
     const payload = {
       type: 'tts' as const,
       text,
-      message_id: 'msg-' + Date.now()
+      message_id: 'msg-' + Date.now(),
+      client: this.clientInfo
     };
 
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -387,6 +397,62 @@ export class MainPage implements AfterViewInit, OnDestroy {
     console.log('All transcriptions:', this.allTranscriptions);
   }
 
+  private initializeClientInfo() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      const stored = sessionStorage.getItem(this.clientInfoStorageKey);
+      if (stored) {
+        this.clientInfo = JSON.parse(stored) as ClientInfo;
+        return;
+      }
+    } catch (error) {
+      console.warn('Failed to read stored client info', error);
+    }
+
+    const detected = this.detectClientInfo();
+    this.clientInfo = detected;
+
+    try {
+      sessionStorage.setItem(this.clientInfoStorageKey, JSON.stringify(detected));
+    } catch (error) {
+      console.warn('Failed to store client info', error);
+    }
+  }
+
+  private detectClientInfo(): ClientInfo {
+    if (!isPlatformBrowser(this.platformId)) {
+      return {
+        os: 'Unknown',
+        browser: 'Unknown',
+        userAgent: ''
+      };
+    }
+    const ua = navigator.userAgent || '';
+    return {
+      os: this.extractOS(ua),
+      browser: this.extractBrowser(ua),
+      userAgent: ua
+    };
+  }
+
+  private extractOS(ua: string): string {
+    if (/windows nt/i.test(ua)) return 'Windows';
+    if (/mac os x/i.test(ua)) return 'macOS';
+    if (/iphone|ipad|ipod/i.test(ua)) return 'iOS';
+    if (/android/i.test(ua)) return 'Android';
+    if (/linux/i.test(ua)) return 'Linux';
+    return 'Unknown';
+  }
+
+  private extractBrowser(ua: string): string {
+    if (/edg/i.test(ua)) return 'Edge';
+    if (/opr|opera/i.test(ua)) return 'Opera';
+    if (/chrome|crios/i.test(ua)) return 'Chrome';
+    if (/safari/i.test(ua) && !/chrome|crios|opr|edg/i.test(ua)) return 'Safari';
+    if (/firefox|fxios/i.test(ua)) return 'Firefox';
+    return 'Unknown';
+  }
+
   private scheduleListeningStart() {
     if (this.listenTimeoutId) {
       clearTimeout(this.listenTimeoutId);
@@ -464,6 +530,13 @@ export class MainPage implements AfterViewInit, OnDestroy {
     });
   }
 
+  openSignUp() {
+    this.isProfilePaneOpen = false;
+    this.router.navigate(['/signup']).catch((error) => {
+      console.error('Failed to navigate to sign up page', error);
+    });
+  }
+
   openHelp() {
     this.isProfilePaneOpen = false;
     this.router.navigate(['/help']).catch((error) => {
@@ -476,8 +549,10 @@ export class MainPage implements AfterViewInit, OnDestroy {
     const container = this.messagesContainer?.nativeElement;
     if (!container) return;
     const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    this.showScrollToLatest = distanceFromBottom > 20;
-    this.cdr.detectChanges();
+    const shouldShow = distanceFromBottom > 20;
+    if (this.showScrollToLatest !== shouldShow) {
+      this.showScrollToLatest = shouldShow;
+    }
   }
 
   private shouldPromptSignIn(data: any): boolean {

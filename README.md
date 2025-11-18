@@ -1,6 +1,6 @@
 # HearHelper
 
-HearHelper is a browser-based companion that lets you speak to Codex, hear natural responses, and stream curated public-domain audiobooks (think Sherlock Holmes). Press and hold anywhere to talk, release to send, and enjoy hands-free listening.
+HearHelper is a browser-based companion that lets you speak to Hear Helper, hear natural responses, and stream curated public-domain audiobooks (think Sherlock Holmes). Press and hold anywhere to talk, release to send, and enjoy hands-free listening.
 
 > ℹ️ All narrated stories bundled with this prototype are sourced from public-domain books.
 

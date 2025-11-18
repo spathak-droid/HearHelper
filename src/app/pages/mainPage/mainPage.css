@@ -333,14 +333,17 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.35);
-  color: #e4f0ff;
-  font-size: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7fbff;
+  font-size: 1.2rem;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(15px);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .scroll-to-latest:hover {
