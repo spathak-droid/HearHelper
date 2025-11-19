@@ -1,0 +1,24 @@
+<div class="verify-page">
+  <section class="verify-card">
+    <p class="eyebrow">Almost there</p>
+    <h1>Please verify your email</h1>
+    <p class="lead">
+      We just sent a confirmation link to
+      <strong>{{ email || 'your inbox' }}</strong>. Click the button in that message to unlock your
+      HearHelper account.
+    </p>
+    <ul class="checklist">
+      <li>Check spam or promotions if you don’t see the email.</li>
+      <li>Add <strong>hello@hearhelper.com</strong> to your contacts to keep updates handy.</li>
+      <li>Once verified, sign back in to start listening.</li>
+    </ul>
+    <div class="actions">
+      <a routerLink="/signin" class="primary-btn">
+        Go to sign in
+      </a>
+      <p class="signin-hint">
+        Already verified? <a routerLink="/signin">Sign in</a> with your new credentials.
+      </p>
+    </div>
+  </section>
+</div>

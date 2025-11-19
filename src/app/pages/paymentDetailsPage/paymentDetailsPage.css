@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap');
+
+.payment-details-page {
+  min-height: 100vh;
+  padding: 40px 24px 120px;
+  background: radial-gradient(circle at top, #6dbfff 0%, #1c2b4a 40%, #050915 100%);
+  color: #f4f7ff;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  box-sizing: border-box;
+}
+
+.ghost-btn {
+  border-radius: 999px;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #f4f7ff;
+  text-decoration: none;
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 20px;
+}
+
+.payment-card-section {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  align-items: start;
+}
+
+.admin-access-card {
+  margin-top: 40px;
+  background: rgba(4, 9, 22, 0.7);
+  border: 1px solid rgba(122, 255, 198, 0.4);
+  border-radius: 24px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+}
+
+.admin-access-card h2 {
+  margin-bottom: 16px;
+}
+
+.admin-access-card p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.card-preview {
+  background: rgba(10, 20, 45, 0.85);
+  background-image: linear-gradient(135deg, rgba(15, 28, 59, 0.7), rgba(26, 44, 79, 0.9)), url('/images/image.png');
+  background-size: cover;
+  background-position: center;
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 20px;
+  color: #f5fbff;
+  min-height: 180px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-brand {
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  opacity: 0.8;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.card-brand img {
+  width: 72px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+.card-chip {
+  width: 46px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.8), rgba(88, 165, 255, 0.8));
+}
+
+.card-number {
+  font-size: 1rem;
+  letter-spacing: 0.28em;
+  font-family: "Roboto Mono", "Courier Prime", monospace;
+  font-weight: 500;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  text-transform: uppercase;
+}
+
+.card-footer .label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.card-footer .value {
+  display: block;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.card-form {
+  background: rgba(4, 9, 22, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  width: 100%;
+  min-width: 0;
+}
+
+.card-form input {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(5, 10, 25, 0.6);
+  padding: 10px;
+  color: #f5fbff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-form select {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(5, 10, 25, 0.6);
+  padding: 10px;
+  color: #f5fbff;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+}
+
+.card-form .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.card-form .row.city-row {
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+}
+
+.card-form .row.expiry-row {
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.card-form .row.city-row label input,
+.card-form .row.city-row label select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-form .row.expiry-row label input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card-form .pay-btn {
+  width: 100%;
+  margin-top: 8px;
+  border-radius: 14px;
+  border: none;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #58a5ff, #147bff);
+  color: #f5fbff;
+  cursor: pointer;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-form .pay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 540px) {
+  .payment-details-page {
+    padding: 30px 16px 80px;
+  }
+
+  .payment-card-section {
+    grid-template-columns: 1fr;
+  }
+
+  .card-form .row,
+  .card-form .row.city-row,
+  .card-form .row.expiry-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

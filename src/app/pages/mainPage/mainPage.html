@@ -72,25 +72,43 @@
             <div class="model-list">
               @for (model of models; track model.id) {
                 <div class="model-row"
-                     role="button"
-                     tabindex="0"
                      [class.playing]="playingModelId === model.id"
                      [class.active-voice]="isActiveVoice(model)"
-                     (click)="promptVoiceChange(model, $event)"
-                     (keydown.enter)="promptVoiceChange(model, $event)"
-                     (keydown.space)="promptVoiceChange(model, $event)">
+                     [class.locked]="!isVoiceFree(model)">
                   <div class="model-info">
-                    <span class="model-id">{{ model.common_name || model.id }}</span>
-                    <small>{{ model.sample?.text }}</small>
+                    <div class="model-name-line">
+                      <span class="model-id">{{ model.common_name || model.id }}</span>
+                      <span class="model-badge"
+                            [class.free]="isVoiceFree(model)"
+                            [class.pro]="!isVoiceFree(model)">
+                        {{ isVoiceFree(model) ? (isAdmin ? 'Unlocked' : 'Free') : 'Pro' }}
+                      </span>
+                    </div>
+                    <small class="sr-only">{{ model.sample?.text }}</small>
                   </div>
-                  <button type="button"
-                          class="model-action"
-                          [attr.aria-label]="playingModelId === model.id ? 'Pause sample' : 'Play sample'"
-                          (click)="toggleSample(model, $event)">
-                    <span class="action-icon">
-                      {{ playingModelId === model.id ? '⏸' : '▶' }}
-                    </span>
-                  </button>
+                  <div class="model-actions">
+                    <button type="button"
+                            class="sample-btn"
+                            [attr.aria-pressed]="playingModelId === model.id"
+                            (click)="toggleSample(model, $event)">
+                      <span class="action-icon">
+                        {{ playingModelId === model.id ? '⏸' : '▶' }}
+                      </span>
+                    </button>
+                    <button *ngIf="isVoiceFree(model)"
+                            type="button"
+                            class="use-voice-btn"
+                            [disabled]="isActiveVoice(model)"
+                            (click)="promptVoiceChange(model, $event)">
+                      {{ isActiveVoice(model) ? 'Selected' : 'Use voice' }}
+                    </button>
+                    <button *ngIf="!isVoiceFree(model)"
+                            type="button"
+                            class="unlock-btn"
+                            (click)="goToPayment($event)">
+                      Unlock
+                    </button>
+                  </div>
                 </div>
               }
             </div>

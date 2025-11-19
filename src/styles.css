@@ -2,6 +2,11 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #02050d;
+  background-image: radial-gradient(circle at top, #0f1b32 0%, #050915 60%, #02050d 100%);
+  background-attachment: fixed;
+  overscroll-behavior: none;
 }

@@ -4,9 +4,9 @@
           [attr.aria-label]="session() ? 'Open profile for ' + userDisplayName() : 'Open profile menu'"
           (click)="showGlobalMenu = !showGlobalMenu">
     <span class="signin-avatar">
-      <img src="/images/blank-avatar.svg"
-           alt=""
-           aria-hidden="true">
+      <img [src]="avatarUrl()"
+           [style.object-position]="avatarObjectPosition()"
+           alt="Profile avatar preview">
     </span>
   </button>
 
@@ -19,10 +19,23 @@
   </a>
 </div>
 
+<div class="global-profile-backdrop" *ngIf="showGlobalMenu" (click)="closeGlobalMenu()"></div>
+
 <div class="global-profile-menu" [class.open]="showGlobalMenu">
   <div class="profile-menu-header">
-    <span class="profile-menu-label">{{ session() ? 'Signed in' : 'User' }}</span>
     <span class="profile-menu-name">{{ userDisplayName() }}</span>
+  </div>
+  <div class="profile-picture-edit">
+    <div class="avatar-preview-wrapper">
+      <img [src]="avatarUrl()" [style.object-position]="avatarObjectPosition()" alt="Profile preview">
+      <label class="avatar-upload-chip" aria-label="Upload photo">
+        <input type="file"
+               accept="image/*"
+               (change)="onAvatarSelected($event)">
+        <span class="material-icons">photo_camera</span>
+      </label>
+    </div>
+    <p class="upload-hint">Use a clear square image (JPG/PNG).</p>
   </div>
   <p class="profile-menu-subtext" *ngIf="session()?.user?.email as email">
     {{ email }}
@@ -48,6 +61,10 @@
         <span>Sign up</span>
       </li>
     </ng-template>
+    <li routerLink="/payment" (click)="showGlobalMenu = false">
+      <span class="menu-icon">💳</span>
+      <span>Payment</span>
+    </li>
     <li routerLink="/help" (click)="showGlobalMenu = false">
       <span class="menu-icon">❓</span>
       <span>Help</span>

@@ -1,0 +1,108 @@
+<div class="payment-details-page">
+  <a routerLink="/payment" class="ghost-btn">← Back to plans</a>
+  @if (isAdmin) {
+    <section class="admin-access-card">
+      <h2>Lifetime Pass already active</h2>
+      <p>
+        This admin account is provisioned with every premium model. No payment is needed—just head back and switch voices freely.
+      </p>
+      <a routerLink="/" class="primary-btn">Return to assistant</a>
+    </section>
+  } @else {
+    <section class="payment-card-section">
+      <div class="card-preview">
+          <div class="card-brand">
+            <img [src]="cardLogo" alt="Card brand logo">
+          </div>
+          <div class="card-number">{{ maskedCardNumber }}</div>
+        <div class="card-footer">
+          <div>
+            <span class="label">Cardholder</span>
+            <span class="value">{{ displayName }}</span>
+          </div>
+          <div>
+            <span class="label">Expires</span>
+            <span class="value">{{ displayExpiry }}</span>
+          </div>
+        </div>
+      </div>
+
+      <form class="card-form">
+        <label>
+          Card type
+          <select [(ngModel)]="cardType" name="cardType">
+            @for (type of cardTypes; track type.value) {
+              <option [ngValue]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Name on card
+          <input type="text" [(ngModel)]="cardName" name="cardName" placeholder="John Doe">
+        </label>
+        <label>
+          Card number
+          <input type="text"
+                 [(ngModel)]="cardNumber"
+                 name="cardNumber"
+                 [maxlength]="cardType === 'amex' ? 17 : 19"
+                 placeholder="0000 0000 0000 0000">
+        </label>
+        <div class="row expiry-row">
+          <label class="card-type-select">
+            Expiry
+            <input type="text"
+                   [(ngModel)]="cardExpiry"
+                   name="cardExpiry"
+                   maxlength="5"
+                   placeholder="MM/YY">
+          </label>
+          <label>
+            CVC
+            <input type="text"
+                   [(ngModel)]="cardCvc"
+                   name="cardCvc"
+                   [maxlength]="cardType === 'amex' ? 4 : 3"
+                   placeholder="CVC">
+          </label>
+        </div>
+        <label>
+          Billing address
+          <input type="text"
+                 [(ngModel)]="billingAddress"
+                 name="billingAddress"
+                 placeholder="123 Electric Ave, Suite 5">
+        </label>
+        <div class="row city-row">
+          <label>
+            City
+            <input type="text"
+                   [(ngModel)]="billingCity"
+                   name="billingCity"
+                   placeholder="Austin">
+          </label>
+          <label>
+            ZIP code
+            <input type="text"
+                   [(ngModel)]="billingZip"
+                   name="billingZip"
+                   maxlength="10"
+                   placeholder="78701">
+          </label>
+          <label>
+            State
+            <select [(ngModel)]="billingState" name="billingState">
+              <option value="" disabled>Select state</option>
+              @for (state of states; track state) {
+                <option [ngValue]="state">{{ state }}</option>
+              }
+            </select>
+          </label>
+        </div>
+        <button type="button" class="primary-btn pay-btn">
+          Pay &amp; unlock Lifetime Pass
+        </button>
+      </form>
+    </section>
+  }
+</div>

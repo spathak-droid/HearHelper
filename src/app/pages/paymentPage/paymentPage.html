@@ -1,0 +1,91 @@
+<div class="payment-page">
+  <section class="payment-hero">
+    <p class="eyebrow">
+      @if (isAdmin) {
+        Admin access detected
+      } @else {
+        Upgrade your voice lineup
+      }
+    </p>
+    <h1>
+      @if (isAdmin) {
+        All premium voices are unlocked
+      } @else {
+        Unlock premium voices
+      }
+    </h1>
+    <p class="intro">
+      @if (isAdmin) {
+        You're already on the all-access plan. Bryce, Danny, Joe, Kathleen, and every future release are linked to your admin seat.
+      } @else {
+        Amy and Arctic are included for everyone. Upgrade to unlock Danny, Bryce, Joe, Kathleen, and future exclusive drops.
+      }
+    </p>
+    <div class="hero-actions">
+      <a routerLink="/" class="ghost-btn">← Back to assistant</a>
+      @if (isAdmin) {
+        <span class="hero-pill">You already have the Lifetime Pass</span>
+      } @else {
+        <a routerLink="/payment/details" class="primary-btn">Unlock Lifetime Pass</a>
+      }
+    </div>
+  </section>
+
+  <section class="payment-plans">
+    @for (plan of plans; track plan.name) {
+      <article class="plan-card" [class.highlight]="plan.highlight">
+        <div class="plan-header">
+          <h2>{{ plan.name }}</h2>
+          <p class="plan-price">{{ plan.price }}</p>
+        </div>
+        <p class="plan-description">
+          {{ plan.description }}
+        </p>
+        <ul>
+          @for (perk of plan.perks; track perk) {
+            <li>{{ perk }}</li>
+          }
+        </ul>
+        @if (plan.highlight) {
+          @if (isAdmin) {
+            <span class="plan-cta completed">
+              All premium voices unlocked
+            </span>
+          } @else {
+            <a class="plan-cta primary" routerLink="/payment/details">
+              Unlock voices
+            </a>
+          }
+        } @else {
+          <span class="plan-cta">
+            Current plan
+          </span>
+        }
+      </article>
+    }
+  </section>
+
+  <section class="payment-faq">
+    <h3>Why upgrade?</h3>
+    <div class="faq-grid">
+      <article>
+        <h4>Premium realism</h4>
+        <p>
+          Bryce, Danny, Joe, and Kathleen offer expressive storytelling tuned for longer conversations and narration.
+        </p>
+      </article>
+      <article>
+        <h4>Zero downtime</h4>
+        <p>
+          Paid plans route through dedicated infrastructure, so your long-form sessions stay responsive.
+        </p>
+      </article>
+      <article>
+        <h4>Commercial rights</h4>
+        <p>
+          Studio subscribers can publish audiobooks, podcasts, and experiences powered by HearHelper voices.
+        </p>
+      </article>
+    </div>
+  </section>
+</div>

@@ -83,9 +83,15 @@
 
       <button type="submit"
               class="primary-btn"
-              [disabled]="!signUpForm.valid">
-        Create account
+              [disabled]="!signUpForm.valid || isSubmitting">
+        {{ isSubmitting ? 'Creating account…' : 'Create account' }}
       </button>
+      <div class="signin-status success" *ngIf="submitSuccess">
+        {{ submitSuccess }}
+      </div>
+      <div class="signin-status error" *ngIf="submitError">
+        {{ submitError }}
+      </div>
     </form>
 
     <div class="signin-cta">

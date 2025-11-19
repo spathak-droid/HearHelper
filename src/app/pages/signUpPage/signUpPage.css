@@ -191,6 +191,23 @@
   text-decoration: underline;
 }
 
+.signin-status {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.signin-status.success {
+  background: rgba(122, 255, 198, 0.12);
+  color: #7affc6;
+}
+
+.signin-status.error {
+  background: rgba(255, 136, 136, 0.12);
+  color: #ff8a8a;
+}
+
 @media (max-width: 600px) {
   .signup-page {
     padding-top: 32px;

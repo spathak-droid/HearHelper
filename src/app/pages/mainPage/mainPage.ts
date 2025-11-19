@@ -1,5 +1,5 @@
 import { Component, inject, PLATFORM_ID, AfterViewInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild, effect } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ModelService, VoiceModel } from '../../services/model.service';
@@ -31,6 +31,7 @@ type ClientInfo = {
   standalone: true,
   templateUrl: './mainPage.html',
   styleUrls: ['./mainPage.css'],
+  imports: [CommonModule]
 })
 export class MainPage implements AfterViewInit, OnDestroy {
 
@@ -75,11 +76,14 @@ export class MainPage implements AfterViewInit, OnDestroy {
   private sampleAudio?: HTMLAudioElement;
   playingModelId: string | null = null;
   protected readonly session = this.auth.session;
+  private readonly freeVoices = new Set<string>(['en_US-amy-medium', 'en_US-arctic-medium']);
   pendingVoiceModel?: VoiceModel;
   isVoiceConfirmOpen = false;
   isVoiceUpdating = false;
   voiceUpdateError = '';
   voiceUpdateSuccess = '';
+  private bookAdvanceTracker = new Map<string, number>();
+  private pendingBookAdvance: { id: string; chunk: number; total: number } | null = null;
 
   recognition: any;
   transcript: string = '';
@@ -96,8 +100,21 @@ export class MainPage implements AfterViewInit, OnDestroy {
     return voiceName || 'Default';
   }
 
+  get isAdmin(): boolean {
+    const role = this.session()?.user?.role;
+    return role?.toLowerCase() === 'admin';
+  }
+
   isActiveVoice(model: VoiceModel): boolean {
     return !!this.activeVoiceId && model.id === this.activeVoiceId;
+  }
+
+  isVoiceFree(model: VoiceModel): boolean {
+    if (this.isAdmin) {
+      return true;
+    }
+    const currentPaidVoice = this.session()?.user?.voice;
+    return this.freeVoices.has(model.id) || model.id === currentPaidVoice;
   }
 
   constructor() {
@@ -189,6 +206,7 @@ export class MainPage implements AfterViewInit, OnDestroy {
         };
         this.messages.push(botMessage);
         this.startTypingEffect(botMessage);
+        this.handleBookAutoAdvance(data, !!data.audio);
         this.scrollToBottom();
         // Handle potential large base64 payloads safely
         if (data.audio) {
@@ -234,6 +252,8 @@ export class MainPage implements AfterViewInit, OnDestroy {
     }
     this.socket = null;
     this.currentSocketToken = null;
+    this.bookAdvanceTracker.clear();
+    this.pendingBookAdvance = null;
   }
 
   private sendTTSRequest(text: string) {
@@ -307,9 +327,14 @@ export class MainPage implements AfterViewInit, OnDestroy {
     this.isAudioPaused = false;
     this.cdr.detectChanges();
 
-    audio.onended = () => this.resetBotAudioState();
+    audio.onended = () => {
+      this.flushBookAdvanceRequest();
+      this.resetBotAudioState();
+    };
 
-    audio.onerror = () => this.resetBotAudioState();
+    audio.onerror = () => {
+      this.resetBotAudioState();
+    };
 
     audio.onpause = () => {
       if (audio.ended) {
@@ -317,12 +342,14 @@ export class MainPage implements AfterViewInit, OnDestroy {
       }
       this.isBotTalking = false;
       this.isAudioPaused = true;
+      this.pauseActiveTyping();
       this.cdr.detectChanges();
     };
 
     audio.onplay = () => {
       this.isBotTalking = true;
       this.isAudioPaused = false;
+      this.resumeActiveTyping();
       this.cdr.detectChanges();
     };
 
@@ -343,6 +370,7 @@ export class MainPage implements AfterViewInit, OnDestroy {
     this.isAudioPaused = false;
     this.activeMessageId = null;
     this.activeBotMessage = undefined;
+    this.pendingBookAdvance = null;
     this.cdr.detectChanges();
   }
 
@@ -606,6 +634,16 @@ export class MainPage implements AfterViewInit, OnDestroy {
     });
   }
 
+  goToPayment(event?: Event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.closeVoiceDialog();
+    this.closeModelPanel();
+    this.router.navigate(['/payment']).catch((error) => {
+      console.error('Failed to navigate to payment page', error);
+    });
+  }
+
   onMessagesScroll() {
     if (!isPlatformBrowser(this.platformId)) return;
     const container = this.messagesContainer?.nativeElement;
@@ -641,14 +679,107 @@ export class MainPage implements AfterViewInit, OnDestroy {
     this.openSignIn();
   }
 
-  private startTypingEffect(message: ChatMessage) {
+  private handleBookAutoAdvance(data: any, hasAudio: boolean) {
+    if (data?.type !== 'book_playback') {
+      return;
+    }
+    const progress = this.extractBookProgress(data);
+    if (!progress) {
+      return;
+    }
+    if (progress.chunk >= progress.total) {
+      this.pendingBookAdvance = null;
+      this.bookAdvanceTracker.delete(progress.id);
+      return;
+    }
+    const lastChunk = this.bookAdvanceTracker.get(progress.id);
+    if (lastChunk === progress.chunk) {
+      return;
+    }
+    this.pendingBookAdvance = progress;
+    if (!hasAudio) {
+      this.flushBookAdvanceRequest();
+    }
+  }
+
+  private flushBookAdvanceRequest() {
+    if (!this.pendingBookAdvance) {
+      return;
+    }
+    const { id, chunk, total } = this.pendingBookAdvance;
+    if (chunk >= total) {
+      this.pendingBookAdvance = null;
+      return;
+    }
+    const lastChunk = this.bookAdvanceTracker.get(id);
+    if (lastChunk === chunk) {
+      this.pendingBookAdvance = null;
+      return;
+    }
+    this.bookAdvanceTracker.set(id, chunk);
+    this.pendingBookAdvance = null;
+    this.sendTTSRequest('next');
+  }
+
+  private extractBookProgress(data: any): { id: string; chunk: number; total: number } | null {
+    const source = data?.book ?? data;
+    if (!source) {
+      return null;
+    }
+    const chunk = this.toNumber(
+      source.chunk ?? source.chunk_index ?? data?.chunk ?? data?.chunk_index
+    );
+    const total = this.toNumber(
+      source.total_chunks ?? source.totalChunks ?? data?.total_chunks ?? data?.totalChunks
+    );
+    if (chunk === null || total === null) {
+      return null;
+    }
+    const id = typeof source.id === 'string' ? source.id : 'book-playback';
+    return { id, chunk, total };
+  }
+
+  private toNumber(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  }
+
+  private pauseActiveTyping() {
+    if (!this.activeBotMessage || !this.activeBotMessage.isTyping) {
+      return;
+    }
+    this.cancelTypingEffect(this.activeBotMessage.id);
+  }
+
+  private resumeActiveTyping() {
+    if (!this.activeBotMessage) {
+      return;
+    }
+    const { displayText = '', text = '' } = this.activeBotMessage;
+    if (displayText.length >= text.length) {
+      return;
+    }
+    this.startTypingEffect(this.activeBotMessage, true);
+  }
+
+  private startTypingEffect(message: ChatMessage, preserveExisting = false) {
     if (!isPlatformBrowser(this.platformId)) {
       message.displayText = message.text;
       message.isTyping = false;
       return;
     }
     this.cancelTypingEffect(message.id);
-    message.displayText = '';
+    if (preserveExisting) {
+      message.displayText = message.displayText ?? '';
+    } else {
+      message.displayText = '';
+    }
     message.isTyping = true;
 
     const typeNext = () => {
@@ -806,6 +937,10 @@ export class MainPage implements AfterViewInit, OnDestroy {
   promptVoiceChange(model: VoiceModel, event?: Event) {
     event?.stopPropagation();
     event?.preventDefault();
+    if (!this.isVoiceFree(model)) {
+      this.goToPayment(event);
+      return;
+    }
     this.pendingVoiceModel = model;
     this.voiceUpdateError = '';
     this.isVoiceConfirmOpen = true;
@@ -824,9 +959,10 @@ export class MainPage implements AfterViewInit, OnDestroy {
     this.isVoiceUpdating = true;
     this.voiceUpdateError = '';
     try {
-      await firstValueFrom(this.modelService.setVoice(this.pendingVoiceModel.id));
-      this.voiceUpdateSuccess = `${this.pendingVoiceModel.common_name || this.pendingVoiceModel.id} is now active.`;
-      this.auth.updateVoice(this.pendingVoiceModel.id, this.pendingVoiceModel.common_name);
+      const response = await firstValueFrom(this.modelService.setVoice(this.pendingVoiceModel.id));
+      const appliedName = response.voice_common_name || this.pendingVoiceModel.common_name || response.voice;
+      this.voiceUpdateSuccess = `${appliedName} is now active.`;
+      this.auth.updateVoice(response.voice, response.voice_common_name);
       this.closeVoiceDialog();
       this.closeModelPanel();
       setTimeout(() => {

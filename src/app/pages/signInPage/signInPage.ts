@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -31,6 +31,7 @@ export class SignInPage {
   private readonly googleAuth = inject(GoogleAuthService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
   protected readonly session = this.authService.session;
 
   async onGoogleSignIn() {
@@ -69,11 +70,14 @@ export class SignInPage {
       );
       this.manualSuccess = response.message || 'Signin successful.';
       await this.router.navigateByUrl('/');
+      this.cdr.detectChanges();
     } catch (err) {
       console.error('Manual sign in failed', err);
       this.manualError = this.extractErrorMessage(err);
+      this.cdr.detectChanges();
     } finally {
       this.isManualLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -97,7 +101,14 @@ export class SignInPage {
         return httpError.error;
       }
       if (typeof httpError.error === 'object' && httpError.error) {
-        const { message, detail } = httpError.error as { message?: string; detail?: string };
+        const { error: nestedError, message, detail } = httpError.error as {
+          error?: string;
+          message?: string;
+          detail?: string;
+        };
+        if (nestedError) {
+          return nestedError;
+        }
         if (message) {
           return message;
         }

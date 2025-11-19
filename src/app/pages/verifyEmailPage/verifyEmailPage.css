@@ -1,0 +1,98 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #6dbfff 0%, #1c2b4a 40%, #050915 100%);
+  color: #e4f0ff;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  padding: 60px 20px 120px;
+  box-sizing: border-box;
+}
+
+.verify-page {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+}
+
+.verify-card {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 40px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin: 0 0 12px 0;
+}
+
+.verify-card h1 {
+  margin: 0 0 16px 0;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+}
+
+.lead {
+  margin: 0 0 20px 0;
+  line-height: 1.7;
+  color: rgba(228, 240, 255, 0.9);
+}
+
+.lead strong {
+  color: #ffffff;
+}
+
+.checklist {
+  margin: 0 0 28px 20px;
+  padding: 0;
+  color: rgba(228, 240, 255, 0.85);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.primary-btn {
+  display: inline-flex;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #58a5ff, #147bff);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.35);
+}
+
+.signin-hint {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(228, 240, 255, 0.85);
+}
+
+.signin-hint a {
+  color: #9fd0ff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signin-hint a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .verify-card {
+    padding: 28px;
+  }
+}

@@ -70,10 +70,15 @@ export class ModelService {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${session.token}`
     });
-    return this.http.post(
+    return this.http.post<VoiceUpdateResponse>(
       this.voiceEndpoint,
       { voice: voiceId },
       { headers }
     );
   }
 }
+type VoiceUpdateResponse = {
+  message: string;
+  voice: string;
+  voice_common_name?: string;
+};

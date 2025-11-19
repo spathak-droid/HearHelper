@@ -1,9 +1,17 @@
 import { Injectable, Inject, PLATFORM_ID, OnDestroy, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, mergeMap } from 'rxjs/operators';
 
 export type SignInCredentials = {
+  email: string;
+  password: string;
+};
+
+export type SignUpPayload = {
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
 };
@@ -14,6 +22,8 @@ export type AuthUser = {
   email: string;
   voice?: string;
   voice_common_name?: string;
+  profile_photo_url?: string;
+  role?: string;
 };
 
 export type SignInResponse = {
@@ -22,11 +32,21 @@ export type SignInResponse = {
   user: AuthUser;
 };
 
+export type PhotoUploadResponse = {
+  upload_url: string;
+  download_url: string;
+  object_key: string;
+  content_type: string;
+  expires_in: number;
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService implements OnDestroy {
   private readonly endpoint = 'http://127.0.0.1:8000/auth/signin/';
+  private readonly signUpEndpoint = 'http://127.0.0.1:8000/auth/signup/';
+  private readonly photoEndpoint = 'http://127.0.0.1:8000/auth/profile/photo-url/';
   private readonly storageKey = 'hearhelper-session';
   private readonly sessionState = signal<SignInResponse | null>(null);
   private readonly isBrowser: boolean;
@@ -62,8 +82,33 @@ export class AuthService implements OnDestroy {
 
   signIn(credentials: SignInCredentials): Observable<SignInResponse> {
     return this.http
-      .post<SignInResponse>(this.endpoint, credentials)
-      .pipe(tap((response) => this.persistSession(response)));
+      .post<SignInResponse | { error?: string; message?: string }>(this.endpoint, credentials)
+      .pipe(
+        mergeMap((response) => {
+          if (response && typeof (response as SignInResponse).token === 'string') {
+            const typed = response as SignInResponse;
+            this.persistSession(typed);
+            return of(typed);
+          }
+          const fallback =
+            (response as { error?: string; message?: string })?.error ||
+            (response as { message?: string }).message ||
+            'Invalid credentials. Please try again.';
+          return throwError(() => new Error(fallback));
+        }),
+        catchError((error) => {
+          const serverMessage =
+            (error?.error?.error as string) ||
+            (error?.error?.message as string) ||
+            error?.message ||
+            'Invalid credentials. Please try again.';
+          return throwError(() => new Error(serverMessage));
+        })
+      );
+  }
+
+  signUp(payload: SignUpPayload): Observable<SignInResponse> {
+    return this.http.post<SignInResponse>(this.signUpEndpoint, payload);
   }
 
   updateVoice(voice: string, voiceName?: string) {
@@ -80,6 +125,29 @@ export class AuthService implements OnDestroy {
       }
     };
     this.persistSession(updated);
+  }
+
+  updateAvatar(avatarUrl: string) {
+    const current = this.sessionState();
+    if (!current) {
+      return;
+    }
+    const updated: SignInResponse = {
+      ...current,
+      user: {
+        ...current.user,
+        profile_photo_url: avatarUrl
+      }
+    };
+    this.persistSession(updated);
+  }
+
+  requestPhotoUpload(extension: string): Observable<PhotoUploadResponse> {
+    const session = this.getSessionOrThrow();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${session.token}`
+    });
+    return this.http.post<PhotoUploadResponse>(this.photoEndpoint, { extension }, { headers });
   }
 
   clearSession() {
@@ -130,5 +198,13 @@ export class AuthService implements OnDestroy {
     } catch (err) {
       console.warn('Failed to restore auth session', err);
     }
+  }
+
+  private getSessionOrThrow(): SignInResponse {
+    const session = this.sessionState();
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
+    return session;
   }
 }
