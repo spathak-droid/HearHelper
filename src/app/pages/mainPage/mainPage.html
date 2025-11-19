@@ -79,9 +79,10 @@
                     <div class="model-name-line">
                       <span class="model-id">{{ model.common_name || model.id }}</span>
                       <span class="model-badge"
+                            *ngIf="!isAdmin || !isVoiceFree(model)"
                             [class.free]="isVoiceFree(model)"
                             [class.pro]="!isVoiceFree(model)">
-                        {{ isVoiceFree(model) ? (isAdmin ? 'Unlocked' : 'Free') : 'Pro' }}
+                        {{ isVoiceFree(model) ? 'Free' : 'Pro' }}
                       </span>
                     </div>
                     <small class="sr-only">{{ model.sample?.text }}</small>

@@ -1,0 +1,95 @@
+<div class="generate-page">
+  <header class="generate-header">
+    <div>
+      <p class="eyebrow">Generate audio</p>
+      <h1>Convert text with your voices</h1>
+      <p class="intro">
+        Paste a short passage, pick an available model, and send it to HearHelper. Limits depend on your plan.
+      </p>
+    </div>
+    <a routerLink="/" class="ghost-btn">← Back to assistant</a>
+  </header>
+
+  <section class="generate-card" *ngIf="session(); else signInReminder">
+    <div class="limit-banner">
+      <strong>Word limit:</strong> {{ wordLimit }} words.
+      <span class="limit-note">{{ upgradeHint }}</span>
+    </div>
+
+    <label class="text-label">
+      Your text
+      <textarea
+        rows="6"
+        placeholder="Describe the scene you want to hear..."
+        [value]="text"
+        (input)="onTextChange($any($event.target)?.value || '')">
+      </textarea>
+    </label>
+    <div class="word-meta" [class.over]="wordCount > wordLimit">
+      {{ wordCount }} / {{ wordLimit }} words
+    </div>
+
+    <label class="text-label">
+      Voice model
+      <div class="model-selector" *ngIf="!isLoadingModels && !modelError && availableModels.length">
+        <select [ngModel]="selectedModelId" (ngModelChange)="selectModel($event)">
+          @for (model of availableModels; track model.id) {
+            <option [ngValue]="model.id">
+              {{ model.common_name || model.id }}
+              @if (!isModelAllowed(model.id)) {
+                (Locked)
+              }
+            </option>
+          }
+        </select>
+        <span class="select-icon material-icons">arrow_drop_down</span>
+      </div>
+      <div class="model-empty" *ngIf="!isLoadingModels && !modelError && !availableModels.length">
+        No accessible models. Update your voice selection first.
+      </div>
+      <div class="model-loader" *ngIf="isLoadingModels">Loading models…</div>
+      <div class="model-error" *ngIf="modelError">{{ modelError }}</div>
+    </label>
+
+    <div class="limit-error" *ngIf="limitError">
+      {{ limitError }}
+      <button class="upgrade-btn"
+              type="button"
+              *ngIf="needsPaymentForWords || needsPaymentForModel"
+              (click)="goToPayment()">
+        Go to payment
+      </button>
+    </div>
+    <div class="status-success" *ngIf="!limitError && statusMessage">
+      {{ statusMessage }}
+    </div>
+
+    <button type="button"
+            class="primary-btn"
+            (click)="generateAudio()"
+            [disabled]="!!limitError || !text.trim() || !selectedModelId || isGeneratingAudio">
+      {{ isGeneratingAudio ? 'Generating…' : 'Generate preview' }}
+    </button>
+    <div class="audio-preview" *ngIf="audioPreviewUrl">
+      <audio [src]="audioPreviewUrl" controls></audio>
+      <a class="ghost-btn download-btn"
+         [href]="audioPreviewUrl"
+         download="hearhelper-preview.mp3">
+        Download audio
+      </a>
+    </div>
+  </section>
+
+  <ng-template #signInReminder>
+    <section class="generate-card">
+      <h2>Sign in to get started</h2>
+      <p>
+        You need an account to pick models and render audio samples. Free accounts allow up to 50 words.
+      </p>
+      <div class="sign-links">
+        <a routerLink="/signin" class="primary-btn">Sign in</a>
+        <a routerLink="/signup" class="ghost-btn">Create account</a>
+      </div>
+    </section>
+  </ng-template>
+</div>

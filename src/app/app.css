@@ -137,6 +137,11 @@
   padding: 12px 0 16px;
 }
 
+.profile-picture-edit.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .avatar-preview-wrapper {
   position: relative;
 }
@@ -165,6 +170,11 @@
   border: 1px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
   cursor: pointer;
+}
+
+.avatar-upload-chip.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .avatar-upload-chip .material-icons {
@@ -283,4 +293,24 @@
 
 .profile-menu-list .session-indicator .menu-icon {
   background: rgba(255, 255, 255, 0.25);
+}
+
+.profile-signout-btn {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 999px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(8, 14, 32, 0.6);
+  color: #f4f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.profile-signout-btn .menu-icon {
+  background: transparent;
 }

@@ -1,4 +1,4 @@
-<div class="global-actions">
+<div class="global-actions" [style.opacity]="globalActionsOpacity()">
   <button class="global-signin-icon"
           type="button"
           [attr.aria-label]="session() ? 'Open profile for ' + userDisplayName() : 'Open profile menu'"
@@ -25,51 +25,57 @@
   <div class="profile-menu-header">
     <span class="profile-menu-name">{{ userDisplayName() }}</span>
   </div>
-  <div class="profile-picture-edit">
+  <div class="profile-picture-edit" [class.disabled]="!session()">
     <div class="avatar-preview-wrapper">
       <img [src]="avatarUrl()" [style.object-position]="avatarObjectPosition()" alt="Profile preview">
-      <label class="avatar-upload-chip" aria-label="Upload photo">
+      <label class="avatar-upload-chip"
+             [class.disabled]="!session()"
+             aria-label="Upload photo">
         <input type="file"
                accept="image/*"
+               [disabled]="!session()"
                (change)="onAvatarSelected($event)">
         <span class="material-icons">photo_camera</span>
       </label>
     </div>
-    <p class="upload-hint">Use a clear square image (JPG/PNG).</p>
+    <p class="upload-hint" *ngIf="session()">Use a clear square image (JPG/PNG).</p>
   </div>
   <p class="profile-menu-subtext" *ngIf="session()?.user?.email as email">
     {{ email }}
   </p>
   <ul class="profile-menu-list">
     <ng-container *ngIf="session(); else loggedOutLinks">
-      <li class="session-indicator">
-        <span class="menu-icon">🪪</span>
-        <span>Session active</span>
-      </li>
-      <li (click)="onSignOut()">
-        <span class="menu-icon">🚪</span>
-        <span>Sign out</span>
+      <li routerLink="/generate-audio" (click)="showGlobalMenu = false">
+        <span class="menu-icon material-icons">graphic_eq</span>
+        <span>Generate audio</span>
       </li>
     </ng-container>
     <ng-template #loggedOutLinks>
       <li routerLink="/signin" (click)="showGlobalMenu = false">
-        <span class="menu-icon">🔐</span>
+        <span class="menu-icon material-icons">lock</span>
         <span>Sign in</span>
       </li>
       <li routerLink="/signup" (click)="showGlobalMenu = false">
-        <span class="menu-icon">✨</span>
+        <span class="menu-icon material-icons">auto_awesome</span>
         <span>Sign up</span>
       </li>
     </ng-template>
     <li routerLink="/payment" (click)="showGlobalMenu = false">
-      <span class="menu-icon">💳</span>
+      <span class="menu-icon material-icons">credit_card</span>
       <span>Payment</span>
     </li>
     <li routerLink="/help" (click)="showGlobalMenu = false">
-      <span class="menu-icon">❓</span>
+      <span class="menu-icon material-icons">help_outline</span>
       <span>Help</span>
     </li>
   </ul>
+  <button class="profile-signout-btn"
+          type="button"
+          *ngIf="session()"
+          (click)="onSignOut()">
+    <span class="menu-icon material-icons">logout</span>
+    <span>Sign out</span>
+  </button>
 </div>
 
 <router-outlet />

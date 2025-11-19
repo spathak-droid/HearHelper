@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
@@ -19,6 +19,7 @@ export class App {
   private readonly avatarPreview = signal<string | null>(null);
   readonly avatarOffsetX = signal(50);
   readonly avatarOffsetY = signal(50);
+  readonly globalActionsOpacity = signal(1);
   protected readonly avatarUrl = computed(
     () => this.avatarPreview() || this.session()?.user?.profile_photo_url || '/images/blank-avatar.svg'
   );
@@ -37,6 +38,7 @@ export class App {
   });
   onSignOut() {
     this.auth.clearSession();
+    this.avatarPreview.set(null);
     this.showGlobalMenu = false;
     this.router.navigate(['/signin']).catch((error) => {
       console.error('Failed to navigate to sign in after logout', error);
@@ -44,6 +46,9 @@ export class App {
   }
 
   async onAvatarSelected(event: Event) {
+    if (!this.session()) {
+      return;
+    }
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
@@ -94,5 +99,17 @@ export class App {
 
   closeGlobalMenu() {
     this.showGlobalMenu = false;
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const maxFadeDistance = 200;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    const ratio = Math.min(scrollTop / maxFadeDistance, 1);
+    const opacity = 1 - ratio * 0.6;
+    this.globalActionsOpacity.set(Math.max(0.4, opacity));
   }
 }
