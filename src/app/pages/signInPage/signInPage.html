@@ -19,8 +19,8 @@
       {{ isGoogleLoading ? 'Signing in…' : 'Continue with Google' }}
     </button>
 
-    <div class="google-status" *ngIf="googleProfile">
-      Signed in as {{ googleProfile.name || googleProfile.email }}
+    <div class="google-status" *ngIf="googleStatus">
+      {{ googleStatus }}
     </div>
     <div class="google-error" *ngIf="googleError">
       {{ googleError }}

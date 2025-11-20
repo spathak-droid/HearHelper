@@ -3,6 +3,38 @@
   min-height: 100vh;
 }
 
+.inactivity-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+}
+
+.inactivity-card {
+  background: rgba(4, 9, 22, 0.95);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 24px 32px;
+  color: #f4f7ff;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4);
+}
+
+.inactivity-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+}
+
+.inactivity-card p {
+  margin: 0;
+  line-height: 1.5;
+}
+
 .global-actions {
   position: fixed;
   top: 24px;

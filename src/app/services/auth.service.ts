@@ -2,7 +2,7 @@ import { Injectable, Inject, PLATFORM_ID, OnDestroy, signal } from '@angular/cor
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, mergeMap } from 'rxjs/operators';
+import { catchError, mergeMap, tap } from 'rxjs/operators';
 
 export type SignInCredentials = {
   email: string;
@@ -40,6 +40,23 @@ export type PhotoUploadResponse = {
   expires_in: number;
 };
 
+export type OAuthLoginUrlResponse = {
+  authorize_url?: string;
+  login_url?: string;
+  state?: string;
+};
+
+export type OAuthCallbackResponse = SignInResponse & {
+  oauth?: {
+    access_token?: string;
+    expires_in?: number;
+    id_token?: string;
+    refresh_token?: string;
+    token_type?: string;
+    [key: string]: unknown;
+  };
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -47,6 +64,8 @@ export class AuthService implements OnDestroy {
   private readonly endpoint = 'http://127.0.0.1:8000/auth/signin/';
   private readonly signUpEndpoint = 'http://127.0.0.1:8000/auth/signup/';
   private readonly photoEndpoint = 'http://127.0.0.1:8000/auth/profile/photo-url/';
+  private readonly oauthLoginEndpoint = 'http://127.0.0.1:8000/auth/oauth/login-url/';
+  private readonly oauthCallbackEndpoint = 'http://127.0.0.1:8000/auth/oauth/callback/';
   private readonly storageKey = 'hearhelper-session';
   private readonly sessionState = signal<SignInResponse | null>(null);
   private readonly isBrowser: boolean;
@@ -148,6 +167,16 @@ export class AuthService implements OnDestroy {
       Authorization: `Bearer ${session.token}`
     });
     return this.http.post<PhotoUploadResponse>(this.photoEndpoint, { extension }, { headers });
+  }
+
+  requestOAuthLoginUrl(redirectUri: string): Observable<OAuthLoginUrlResponse> {
+    return this.http.post<OAuthLoginUrlResponse>(this.oauthLoginEndpoint, { redirect_uri: redirectUri });
+  }
+
+  completeOAuthSignIn(code: string, redirectUri: string): Observable<OAuthCallbackResponse> {
+    return this.http
+      .post<OAuthCallbackResponse>(this.oauthCallbackEndpoint, { code, redirect_uri: redirectUri })
+      .pipe(tap((response) => this.persistSession(response)));
   }
 
   clearSession() {

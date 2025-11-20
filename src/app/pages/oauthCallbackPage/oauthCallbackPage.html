@@ -1,0 +1,21 @@
+<div class="oauth-callback-wrapper">
+  <div class="background-ornament glow-one"></div>
+  <div class="background-ornament glow-two"></div>
+  <div class="oauth-card">
+    <div class="status-icon">
+      <div class="spinner" *ngIf="!error" aria-hidden="true"></div>
+      <span class="material-icon" *ngIf="error">⚠️</span>
+    </div>
+    <div class="heading-block">
+      <p class="eyebrow">Secure authentication</p>
+      <h1>{{ error ? 'Sign in failed' : 'Signing you in' }}</h1>
+    </div>
+    <p class="status-text">{{ status }}</p>
+    <p class="error-text" *ngIf="error">
+      {{ error }}
+    </p>
+    <p *ngIf="!error" class="hint-text">
+      You'll be redirected shortly.
+    </p>
+  </div>
+</div>

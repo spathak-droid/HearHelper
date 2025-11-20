@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, HostListener } from '@angular/core';
+import { Component, computed, inject, signal, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
@@ -20,6 +20,7 @@ export class App {
   readonly avatarOffsetX = signal(50);
   readonly avatarOffsetY = signal(50);
   readonly globalActionsOpacity = signal(1);
+  readonly inactivityNotice = signal(false);
   protected readonly avatarUrl = computed(
     () => this.avatarPreview() || this.session()?.user?.profile_photo_url || '/images/blank-avatar.svg'
   );
@@ -27,6 +28,9 @@ export class App {
     () => `${this.avatarOffsetX()}% ${this.avatarOffsetY()}%`
   );
   readonly isAvatarUploading = signal(false);
+  private inactivityTimeoutId?: number;
+  private removeActivityListeners?: () => void;
+  private readonly inactivityLimitMs = 3600000;
   protected readonly userDisplayName = computed(() => {
     const user = this.session()?.user;
     if (!user) {
@@ -36,13 +40,37 @@ export class App {
     const last = user.last_name?.trim() ?? '';
     return `${first} ${last}`.trim();
   });
-  onSignOut() {
+  constructor() {
+    effect(() => {
+      if (this.session()) {
+        this.startInactivityWatch();
+      } else {
+        this.stopInactivityWatch();
+      }
+    });
+  }
+
+  onSignOut(showNotice = false) {
+    if (showNotice) {
+      this.inactivityNotice.set(true);
+      setTimeout(() => this.inactivityNotice.set(false), 5000);
+    }
     this.auth.clearSession();
     this.avatarPreview.set(null);
     this.showGlobalMenu = false;
-    this.router.navigate(['/signin']).catch((error) => {
-      console.error('Failed to navigate to sign in after logout', error);
-    });
+    const navigateToSignin = () =>
+      this.router.navigate(['/signin']).catch((error) => {
+        console.error('Failed to navigate to sign in after logout', error);
+      });
+    setTimeout(
+      () => {
+        navigateToSignin();
+        if (!showNotice) {
+          this.inactivityNotice.set(false);
+        }
+      },
+      showNotice ? 1800 : 0
+    );
   }
 
   async onAvatarSelected(event: Event) {
@@ -111,5 +139,49 @@ export class App {
     const ratio = Math.min(scrollTop / maxFadeDistance, 1);
     const opacity = 1 - ratio * 0.6;
     this.globalActionsOpacity.set(Math.max(0.4, opacity));
+  }
+
+  private startInactivityWatch() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (!this.removeActivityListeners) {
+      const handler = () => this.resetInactivityTimer();
+      const events: Array<keyof WindowEventMap> = ['pointerdown', 'mousemove', 'keydown', 'touchstart'];
+      events.forEach((evt) => window.addEventListener(evt, handler, { passive: true }));
+      this.removeActivityListeners = () => {
+        events.forEach((evt) => window.removeEventListener(evt, handler));
+        this.removeActivityListeners = undefined;
+      };
+    }
+    this.resetInactivityTimer();
+  }
+
+  private stopInactivityWatch(resetNotice = true) {
+    if (this.removeActivityListeners) {
+      this.removeActivityListeners();
+    }
+    if (this.inactivityTimeoutId) {
+      clearTimeout(this.inactivityTimeoutId);
+      this.inactivityTimeoutId = undefined;
+    }
+    if (resetNotice) {
+      this.inactivityNotice.set(false);
+    }
+  }
+
+  private resetInactivityTimer() {
+    if (!this.session()) {
+      return;
+    }
+    if (this.inactivityTimeoutId) {
+      clearTimeout(this.inactivityTimeoutId);
+    }
+    this.inactivityTimeoutId = window.setTimeout(() => this.handleInactivity(), this.inactivityLimitMs);
+  }
+
+  private handleInactivity() {
+    this.stopInactivityWatch(false);
+    this.onSignOut(true);
   }
 }

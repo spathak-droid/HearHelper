@@ -2,8 +2,7 @@ import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GoogleAuthService, GoogleProfile } from '../../services/google-auth.service';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, OAuthLoginUrlResponse } from '../../services/auth.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -18,9 +17,8 @@ export class SignInPage {
     email: '',
     password: ''
   };
-  private readonly sessionKey = 'hearhelper-user';
-  googleProfile?: GoogleProfile;
   googleError = '';
+  googleStatus = '';
   isGoogleLoading = false;
   showPassword = false;
   isManualLoading = false;
@@ -28,7 +26,6 @@ export class SignInPage {
   manualSuccess = '';
   readonly emailPattern = '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$';
   readonly passwordPattern = '^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$';
-  private readonly googleAuth = inject(GoogleAuthService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -36,20 +33,24 @@ export class SignInPage {
 
   async onGoogleSignIn() {
     this.googleError = '';
+    this.googleStatus = '';
     this.isGoogleLoading = true;
     try {
-      const profile = await this.googleAuth.signIn();
-      if (!profile) {
-        this.googleError = 'Google sign in was cancelled.';
+      const redirectUri = this.resolveOAuthRedirectUri();
+      const response = await firstValueFrom(this.authService.requestOAuthLoginUrl(redirectUri));
+      const loginUrl = this.resolveAuthorizeUrl(response);
+      if (!loginUrl) {
+        this.googleError = 'Unable to start Google sign in. Please try again.';
         return;
       }
-      this.googleProfile = profile;
-      sessionStorage.setItem(this.sessionKey, JSON.stringify(profile));
+      this.googleStatus = 'Redirecting you to Google...';
+      window.location.href = loginUrl;
     } catch (err) {
-      console.error(err);
-      this.googleError = 'Failed to sign in with Google. Please try again.';
+      console.error('Failed to start Google OAuth login', err);
+      this.googleError = this.extractErrorMessage(err);
     } finally {
       this.isGoogleLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -127,5 +128,23 @@ export class SignInPage {
     }
 
     return 'Unable to sign in. Please try again.';
+  }
+
+  private resolveOAuthRedirectUri(): string {
+    if (typeof window === 'undefined') {
+      return 'http://localhost:4200/oauth/callback';
+    }
+    const targetTree = this.router.createUrlTree(['/oauth/callback']);
+    const serialized = this.router.serializeUrl(targetTree);
+    return new URL(serialized, window.location.origin).toString();
+  }
+
+  private resolveAuthorizeUrl(response: OAuthLoginUrlResponse): string | undefined {
+    const value = response?.authorize_url || response?.login_url;
+    if (!value) {
+      return undefined;
+    }
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : undefined;
   }
 }

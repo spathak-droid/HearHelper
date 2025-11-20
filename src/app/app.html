@@ -1,3 +1,12 @@
+@if (inactivityNotice()) {
+  <div class="inactivity-overlay">
+    <div class="inactivity-card">
+      <h3>Your session has timed out</h3>
+      <p>Please sign in to continue.</p>
+    </div>
+  </div>
+}
+
 <div class="global-actions" [style.opacity]="globalActionsOpacity()">
   <button class="global-signin-icon"
           type="button"
